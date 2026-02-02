@@ -131,16 +131,40 @@ sources:
   meetily:
     enabled: false
     type: transcript
-    prefer_mcp: false  # Local only, no MCP
+    prefer_mcp: false  # Local only, no MCP or API
 
-    # Path to Meetily SQLite database
-    database_path: ~/Library/Application Support/Meetily/meetily.db
+    # Meetily stores transcripts in a local SQLite database
+    # OPAL reads directly from this database (no fork needed)
+    database:
+      # Auto-detect from standard locations, or specify manually
+      path: auto  # auto | /path/to/database.sqlite
+
+      # Standard locations searched (in order):
+      # macOS: ~/Library/Application Support/com.meetily.ai/meeting_minutes.sqlite
+      # Windows: %APPDATA%/com.meetily.ai/meeting_minutes.sqlite
+      # Linux: ~/.local/share/com.meetily.ai/meeting_minutes.sqlite
+
+      # Database tables used:
+      # - meetings: Meeting metadata (id, title, created_at)
+      # - transcripts: Transcript segments (meeting_id, timestamp, transcript)
+      # - summary_processes: AI-generated summaries (meeting_id, result)
 
     sync:
-      schedule: manual
+      schedule: manual         # manual | "cron expression"
+      track_synced: true       # Remember which meetings have been synced
+      sync_state_file: _inbox/meetings/.meetily_synced
+
+    filters:
+      exclude_titles: []       # Titles to skip
+      min_duration_minutes: 0  # Minimum meeting duration
+      max_age_days: -1         # -1 = no limit
 
     output:
-      directory: _inbox/transcripts/meetily/
+      directory: _inbox/meetings/
+      filename_format: "{date}_{slug}.md"  # e.g., 2026-02-02T14-30_team-standup.md
+      include_summary: true
+      include_action_items: true
+      convert_action_items_to_tasks: true  # Add [ ] checkboxes
 
   # ─────────────────────────────────────────
   # Communication Sources
