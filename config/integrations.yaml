@@ -20,6 +20,7 @@ notion:
     patterns: null      # Will be auto-discovered
     protocols: null
     playbooks: null
+    activities: null    # For Activity Index content
     # ... etc
 
   # Sync settings
@@ -49,72 +50,256 @@ github:
     labels:
       new_pattern: ["new-pattern", "needs-review"]
       new_protocol: ["new-protocol", "needs-review"]
+      new_activity: ["new-activity", "needs-review"]
       update: ["update"]
       merge: ["entity-merge", "needs-review"]
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Transcript Sources
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CONTENT SOURCES
+# Configure sources for /sync command
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-otter:
-  enabled: true
-  prefer_mcp: true
-  api_key_env: OTTER_API_KEY
+sources:
+  # ─────────────────────────────────────────
+  # Transcript Sources
+  # ─────────────────────────────────────────
 
-  # Ingestion settings
-  workspaces: []  # Empty = all workspaces
-  filters:
-    exclude_titles:
-      - "standup"
-      - "1:1"
-      - "daily sync"
-    min_duration_minutes: 10
-    max_age_days: 30
+  fathom:
+    enabled: false
+    type: transcript
+    prefer_mcp: true
+    mcp_server: fathom-mcp  # If MCP server available
+    api_key_env: FATHOM_API_KEY
+    api_endpoint: https://api.fathom.video/v1
 
-fathom:
-  enabled: false
-  prefer_mcp: true
-  api_key_env: FATHOM_API_KEY
+    sync:
+      schedule: "0 */4 * * *"   # Every 4 hours
+      # schedule: manual        # Only on /sync fathom
 
-  filters:
-    min_duration_minutes: 10
-    max_age_days: 30
+    filters:
+      workspaces: []            # Empty = all workspaces
+      exclude_titles:
+        - "standup"
+        - "1:1"
+        - "daily sync"
+        - "check-in"
+      min_duration_minutes: 5
+      max_age_days: 30
 
-readai:
-  enabled: false
-  prefer_mcp: true
-  api_key_env: READAI_API_KEY
+    output:
+      directory: _inbox/transcripts/fathom/
+      include_summary: true
+      include_action_items: true
 
-  filters:
-    min_duration_minutes: 10
-    max_age_days: 30
+  otter:
+    enabled: false
+    type: transcript
+    prefer_mcp: true
+    api_key_env: OTTER_API_KEY
 
-meetily:
-  enabled: false
-  prefer_mcp: false  # Local only
+    sync:
+      schedule: "0 */6 * * *"   # Every 6 hours
 
-  # Path to Meetily SQLite database
-  database_path: ~/Library/Application Support/Meetily/meetily.db
+    filters:
+      workspaces: []
+      exclude_titles:
+        - "standup"
+        - "1:1"
+        - "daily sync"
+      min_duration_minutes: 10
+      max_age_days: 30
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Communication
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    output:
+      directory: _inbox/transcripts/otter/
 
-telegram:
-  enabled: false
-  bot_token_env: TELEGRAM_BOT_TOKEN
+  read_ai:
+    enabled: false
+    type: transcript
+    prefer_mcp: true
+    api_key_env: READ_AI_API_KEY
 
-  # Channels to monitor for links
-  channels: []
+    sync:
+      schedule: manual
 
-  # Link ingestion settings
-  ingestion:
-    auto_fetch: true  # Automatically fetch link content
-    categories:
-      - articles
-      - papers
-      - tools
-      - resources
+    filters:
+      min_duration_minutes: 10
+      max_age_days: 30
+
+    output:
+      directory: _inbox/transcripts/read_ai/
+
+  meetily:
+    enabled: false
+    type: transcript
+    prefer_mcp: false  # Local only, no MCP
+
+    # Path to Meetily SQLite database
+    database_path: ~/Library/Application Support/Meetily/meetily.db
+
+    sync:
+      schedule: manual
+
+    output:
+      directory: _inbox/transcripts/meetily/
+
+  # ─────────────────────────────────────────
+  # Communication Sources
+  # ─────────────────────────────────────────
+
+  telegram:
+    enabled: false
+    type: links
+    bot_token_env: TELEGRAM_BOT_TOKEN
+
+    sync:
+      schedule: "*/30 * * * *"   # Every 30 minutes
+
+    # Channels to monitor
+    channels: []
+    # Example channel configuration:
+    # channels:
+    #   - id: -1001234567890
+    #     name: opencivics-links
+    #     monitor_type: links       # links | all | media
+    #   - id: -1009876543210
+    #     name: resources
+    #     monitor_type: links
+    #   - id: -1005555555555
+    #     name: activities
+    #     monitor_type: links
+    #     taxonomy_hint: activity-index  # Suggest Activity Index classification
+
+    link_handling:
+      auto_fetch: true            # Fetch URL content
+      fetch_timeout: 30           # Seconds
+      max_content_size_mb: 10
+      convert_to_markdown: true   # Use readability extraction
+
+    filters:
+      exclude_domains:
+        - twitter.com
+        - x.com
+        - t.co
+      include_domains: []         # Empty = all allowed (except excluded)
+      exclude_urls_containing:
+        - /status/
+        - /tweet/
+
+    output:
+      directory: _inbox/links/telegram/
+      include_context: true       # Include Telegram message context
+
+  # ─────────────────────────────────────────
+  # Feed Sources
+  # ─────────────────────────────────────────
+
+  rss:
+    enabled: false
+    type: feed
+
+    sync:
+      schedule: "0 */2 * * *"     # Every 2 hours
+
+    feeds: []
+    # Example feed configuration:
+    # feeds:
+    #   - url: https://blog.opencivics.co/feed
+    #     name: Open Civics Blog
+    #     category: articles
+    #   - url: https://governance-weekly.org/rss
+    #     name: Governance Weekly
+    #     category: news
+    #   - url: https://civictech.guide/feed.xml
+    #     name: Civic Tech Guide
+    #     category: resources
+
+    filters:
+      max_age_days: 14
+      exclude_titles_containing: []
+
+    output:
+      directory: _inbox/links/rss/
+      fetch_full_content: true    # Fetch full article, not just excerpt
+
+  # ─────────────────────────────────────────
+  # Media Sources
+  # ─────────────────────────────────────────
+
+  youtube:
+    enabled: false
+    type: transcript
+    api_key_env: YOUTUBE_API_KEY
+
+    sync:
+      schedule: manual
+
+    # Channels or playlists to monitor
+    channels: []
+    playlists: []
+    # Example:
+    # channels:
+    #   - id: UCxxxxxxxx
+    #     name: Civic Tech Talks
+    # playlists:
+    #   - id: PLxxxxxxxx
+    #     name: Governance Conference 2026
+
+    filters:
+      min_duration_minutes: 5
+      max_duration_minutes: 180
+      require_captions: true      # Only videos with available captions
+
+    output:
+      directory: _inbox/transcripts/youtube/
+      include_description: true
+      include_chapters: true
+
+  podcast:
+    enabled: false
+    type: transcript
+
+    sync:
+      schedule: "0 8 * * *"       # Daily at 8am
+
+    feeds: []
+    # Example:
+    # feeds:
+    #   - url: https://podcast.example.com/feed
+    #     name: Civic Innovation Podcast
+    #     transcription: whisper   # whisper | assembly_ai | none
+
+    filters:
+      max_age_days: 30
+      min_duration_minutes: 10
+
+    output:
+      directory: _inbox/transcripts/podcast/
+
+  # ─────────────────────────────────────────
+  # Document Sources
+  # ─────────────────────────────────────────
+
+  email:
+    enabled: false
+    type: mixed
+    auth_method: imap  # imap | gmail_api
+
+    # IMAP configuration
+    imap:
+      server_env: EMAIL_IMAP_SERVER
+      username_env: EMAIL_USERNAME
+      password_env: EMAIL_PASSWORD
+      folder: INBOX/OPAL          # Folder to monitor
+
+    sync:
+      schedule: "0 */4 * * *"
+
+    filters:
+      from_addresses: []          # Only from these addresses (empty = all)
+      subject_contains: []        # Only matching subjects
+
+    output:
+      directory: _inbox/documents/email/
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Google Suite
@@ -146,6 +331,37 @@ mcp:
 
   # MCP server endpoints (auto-discovered or manual)
   servers:
-    notion: null  # Auto-discover
+    notion: null      # Auto-discover
     github: null
+    fathom: null
+    otter: null
     # Add custom MCP servers here
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Taxonomy Routing
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+taxonomy_routing:
+  # Default taxonomy for classification
+  default: opl
+
+  # Source-specific taxonomy preferences
+  # When content from a source could match multiple taxonomies,
+  # prefer the one specified here
+  source_preferences:
+    telegram:
+      prefer: activity-index     # Telegram links often are activities
+      fallback: opl
+    fathom:
+      prefer: opl
+    otter:
+      prefer: opl
+    rss:
+      prefer: opl
+      # Can also specify per-feed:
+      # per_feed:
+      #   "Grants Weekly": activity-index
+
+  # Allow dual classification when confidence is high for both
+  allow_dual_classification: true
+  dual_classification_threshold: 0.8
