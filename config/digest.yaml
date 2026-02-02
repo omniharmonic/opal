@@ -1,0 +1,119 @@
+# Digest Configuration
+# Automated activity summaries and notifications
+
+# Enable digests
+enabled: true
+
+# Commons info (used in digest content)
+commons:
+  name: "Open Protocol Library"
+  site_url: "https://commons.opencivics.co"
+  contribute_url: "https://github.com/opencivics/opl/contribute"
+
+# Digest frequencies
+frequencies:
+  daily:
+    enabled: true
+    time: "09:00"
+    timezone: "America/Los_Angeles"
+    skip_if_empty: true
+    channels: [telegram]
+
+  weekly:
+    enabled: true
+    day: monday
+    time: "09:00"
+    timezone: "America/Los_Angeles"
+    skip_if_empty: false
+    channels: [email, slack]
+
+  monthly:
+    enabled: true
+    day: 1  # First of month
+    time: "09:00"
+    timezone: "America/Los_Angeles"
+    channels: [newsletter]
+
+# Content settings
+content:
+  # Maximum items per section
+  max_items_per_section: 10
+
+  # Maximum total items
+  max_total_items: 30
+
+  # Include pending review items
+  include_pending: true
+
+  # Include statistics
+  include_statistics: true
+
+  # AI-generated highlights
+  ai_highlights: true
+  highlight_count: 5
+
+  # AI-generated summary
+  ai_summary: true
+
+  # Include gap analysis (monthly only)
+  include_gaps: true
+
+  # Include upcoming/teaser content
+  include_teasers: true
+
+# Distribution channels
+distribution:
+  email:
+    enabled: true
+    provider: sendgrid  # sendgrid | mailgun | ses
+    from_name: "Open Protocol Library"
+    from_email: "digest@opencivics.co"
+
+  telegram:
+    enabled: true
+    channel: "@opl_updates"
+    bot_token_env: TELEGRAM_BOT_TOKEN
+
+  slack:
+    enabled: false
+    webhook_url_env: SLACK_WEBHOOK_URL
+    channel: "#commons-updates"
+
+  newsletter:
+    enabled: false
+    provider: buttondown  # buttondown | substack
+    api_key_env: NEWSLETTER_API_KEY
+
+# Subscriber management
+subscribers:
+  # Subscriber list file
+  file: _config/subscribers.yaml
+
+  # Allow self-subscription
+  allow_self_subscribe: true
+
+  # Require confirmation
+  double_opt_in: true
+
+# Archive settings
+archive:
+  # Save digests to file
+  enabled: true
+  directory: _digests/
+  format: markdown
+
+  # Generate index page
+  generate_index: true
+
+  # Publish to site
+  publish_to_site: true
+  site_path: /digests/
+
+# Metrics tracking
+metrics:
+  enabled: true
+  track:
+    - digests_sent
+    - open_rate
+    - click_rate
+    - unsubscribe_rate

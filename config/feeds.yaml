@@ -1,0 +1,73 @@
+# RSS/Atom Feed Monitoring Configuration
+
+# Monitoring settings
+monitoring:
+  enabled: true
+  default_interval: 1h
+  min_interval: 15m
+  max_interval: 24h
+  adaptive_intervals: true
+  max_concurrent: 5
+
+# Relevance filtering
+relevance:
+  semantic_matching: true
+  threshold: 0.5
+  require_keywords: false
+
+  # Boost recent items
+  recency_boost: true
+  recency_window_days: 7
+
+# Storage
+storage:
+  subscriptions: _feeds/subscriptions.yaml
+  pending: _inbox/feeds/pending.json
+  history: _feeds/history/
+  history_retention_days: 30
+
+# Notifications
+notifications:
+  enabled: true
+  channels: [telegram]
+  batch_interval: 1h
+  min_relevance: 0.6
+  max_items_per_notification: 10
+
+# Limits
+limits:
+  max_subscriptions: 100
+  max_items_per_check: 20
+  max_pending_items: 200
+
+# Error handling
+errors:
+  retry_count: 3
+  backoff: exponential
+  pause_after_failures: 5
+  notify_on_pause: true
+
+# Curated feed suggestions
+suggested_feeds:
+  governance:
+    - name: "Open Government Partnership"
+      url: "https://www.opengovpartnership.org/feed/"
+      description: "Global open government initiatives"
+
+    - name: "Participedia"
+      url: "https://participedia.net/feed"
+      description: "Participatory democracy case studies"
+
+  civic_tech:
+    - name: "Civic Tech Field Guide"
+      url: "https://civictech.guide/feed/"
+      description: "Civic technology projects"
+
+    - name: "Code for America"
+      url: "https://codeforamerica.org/feed/"
+      description: "Government technology"
+
+  democracy:
+    - name: "Democracy Now"
+      url: "https://www.democracynow.org/democracynow.rss"
+      description: "Democratic participation news"

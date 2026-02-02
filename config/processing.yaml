@@ -1,0 +1,109 @@
+# Processing Configuration
+# Content processing settings for various input types
+
+# PDF Processing
+pdf:
+  # Extraction method
+  method: auto  # auto | text | ocr | grobid
+
+  # Text extraction
+  text_extraction:
+    tool: pdfplumber  # pdfplumber | pymupdf | pdfminer
+    preserve_layout: true
+
+  # OCR settings
+  ocr:
+    enabled: true
+    engine: tesseract
+    languages: [eng]
+    dpi: 300
+
+    preprocessing:
+      deskew: true
+      denoise: true
+      contrast_enhance: true
+
+  # Table extraction
+  tables:
+    enabled: true
+    tool: camelot  # camelot | tabula
+    output_format: markdown
+
+  # Figure extraction
+  figures:
+    enabled: true
+    describe: true  # Use Claude vision for descriptions
+    output_dir: _assets/figures/
+
+  # Academic paper handling
+  academic:
+    enabled: true
+    use_grobid: false  # Requires GROBID server
+    grobid_url: http://localhost:8070
+
+  # Output
+  output:
+    format: markdown
+    include_metadata: true
+    preserve_structure: true
+
+# Transcript Processing
+transcript:
+  # Cleanup settings
+  cleanup:
+    remove_filler_words: true
+    fix_common_errors: true
+    normalize_punctuation: true
+    speaker_normalization: true
+
+  # Structure detection
+  structure:
+    detect_topics: true
+    add_headers: true
+    preserve_speaker_turns: true
+
+# Web Content (for reference - using browser extensions)
+web:
+  # Readability extraction
+  readability:
+    enabled: true
+    include_images: false
+
+  # Metadata extraction
+  metadata:
+    extract_author: true
+    extract_date: true
+    extract_title: true
+
+# General Processing
+general:
+  # Parallel processing
+  max_parallel: 4
+
+  # Temporary files
+  temp_dir: _temp/
+
+  # Cleanup temp files after
+  cleanup_temp_after_hours: 24
+
+# File type routing
+routing:
+  # Map extensions to processors
+  ".pdf": pdf
+  ".mp3": transcription
+  ".m4a": transcription
+  ".wav": transcription
+  ".mp4": transcription
+  ".md": passthrough
+  ".txt": passthrough
+
+# Quality checks
+quality:
+  # Minimum confidence for auto-processing
+  min_confidence: 0.7
+
+  # Flag for review if below threshold
+  flag_low_confidence: true
+
+  # Reject if below minimum
+  min_acceptable: 0.5

@@ -1,0 +1,141 @@
+# Embeddings Configuration
+# RAG infrastructure for semantic search and relationship discovery
+
+# Embedding Provider Configuration
+provider:
+  # Primary: Local embeddings via Ollama (privacy-preserving, no API costs)
+  primary: ollama
+  # Fallback: OpenAI embeddings (higher quality, requires API key)
+  fallback: openai
+
+# Ollama Embedding Settings
+ollama:
+  # Recommended models for embeddings (in preference order):
+  # - nomic-embed-text: Best balance of quality/speed, 768 dimensions
+  # - mxbai-embed-large: Higher quality, 1024 dimensions, slower
+  # - all-minilm: Fastest, 384 dimensions, good for quick searches
+  model: nomic-embed-text
+  base_url: http://localhost:11434
+  dimensions: 768
+  # Batch size for processing multiple texts
+  batch_size: 32
+  # Context window for chunking
+  context_window: 8192
+
+# OpenAI Embedding Settings (fallback)
+openai:
+  model: text-embedding-3-small
+  dimensions: 1536
+  # API key from secrets.local
+  api_key_env: OPENAI_API_KEY
+
+# Vector Storage Configuration
+storage:
+  # Storage backend options:
+  # - sqlite-vec: SQLite extension, zero dependencies, good for small-medium
+  # - chromadb: Full-featured, good for medium-large collections
+  # - lancedb: Serverless, excellent for large collections
+  backend: sqlite-vec
+
+  # Database location
+  path: _index/embeddings.db
+
+  # Collection names
+  collections:
+    entities: opal_entities
+    chunks: opal_chunks
+    relationships: opal_relationships
+
+# Chunking Strategy
+chunking:
+  # How to split content for embedding
+  strategy: semantic  # semantic | fixed | sentence
+
+  # Target chunk size (tokens)
+  chunk_size: 512
+
+  # Overlap between chunks (tokens)
+  chunk_overlap: 64
+
+  # Preserve semantic boundaries (paragraphs, sections)
+  preserve_boundaries: true
+
+  # Include metadata in chunk context
+  include_metadata: true
+
+# Embedding Triggers
+triggers:
+  # When to generate/update embeddings
+  on_entity_create: true
+  on_entity_update: true
+  on_commit: true
+
+  # Background reindexing
+  background_reindex:
+    enabled: true
+    # Reindex stale embeddings older than N days
+    stale_threshold_days: 30
+    # Maximum items per background run
+    batch_limit: 100
+
+# Semantic Search Configuration
+search:
+  # Default number of results
+  default_limit: 10
+
+  # Minimum similarity threshold (0-1)
+  min_similarity: 0.5
+
+  # Boost recent content
+  recency_boost: 0.1
+
+  # Boost exact matches
+  exact_match_boost: 0.2
+
+  # Hybrid search (combine semantic + keyword)
+  hybrid:
+    enabled: true
+    semantic_weight: 0.7
+    keyword_weight: 0.3
+
+# Relationship Discovery
+discovery:
+  # Automatically suggest relationships during ingestion
+  auto_suggest: true
+
+  # Minimum similarity to suggest relationship
+  suggestion_threshold: 0.75
+
+  # Maximum suggestions per entity
+  max_suggestions: 5
+
+  # Relationship types to discover
+  discover_types:
+    - related_to
+    - similar_to
+    - builds_on
+    - contradicts
+    - extends
+
+# Index Maintenance
+maintenance:
+  # Automatic garbage collection
+  gc_enabled: true
+  gc_interval_hours: 24
+
+  # Remove orphaned embeddings
+  remove_orphans: true
+
+  # Optimize index periodically
+  optimize_interval_hours: 168  # weekly
+
+# Monitoring
+monitoring:
+  # Log embedding operations
+  log_operations: true
+
+  # Track query performance
+  track_latency: true
+
+  # Alert on slow queries (ms)
+  slow_query_threshold_ms: 500

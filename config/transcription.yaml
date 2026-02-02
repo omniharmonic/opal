@@ -1,0 +1,107 @@
+# Transcription Configuration
+# Background audio-to-text processing with OpenAI Whisper
+
+# Backend selection
+backend: openai-whisper  # openai-whisper (Python library)
+
+# OpenAI Whisper settings (pip install openai-whisper)
+openai_whisper:
+  # Default model (tiny, base, small, medium, large, turbo)
+  default_model: turbo
+  # Device: cpu, cuda, or auto
+  device: auto
+  # Model cache directory
+  model_dir: ~/.cache/whisper/
+  # Language (None for auto-detect)
+  language: null
+  # Task: transcribe or translate
+  task: transcribe
+
+# Model auto-selection based on duration
+model_selection:
+  enabled: true
+  rules:
+    - duration_max: 300    # 5 minutes
+      model: small
+    - duration_max: 1800   # 30 minutes
+      model: medium
+    - duration_max: 7200   # 2 hours
+      model: turbo
+    - duration_min: 7200   # 2+ hours
+      model: turbo
+
+# Supported formats
+formats:
+  audio: [mp3, m4a, wav, ogg, flac, aac]
+  video: [mp4, mov, mkv, webm]
+
+# Watch folders (relative to commons root)
+watch_folders:
+  - _inbox/audio/
+  - _inbox/video/
+  - _inbox/voice-memos/
+
+# Processing settings
+processing:
+  # Check for new files every N seconds
+  poll_interval: 30
+
+  # Maximum concurrent jobs
+  max_concurrent: 1
+
+  # Resource limits
+  max_cpu_percent: 70
+  pause_on_battery: true
+
+  # Quiet hours (pause processing)
+  quiet_hours:
+    enabled: false
+    start: "23:00"
+    end: "07:00"
+
+# Output settings
+output:
+  # Transcript format
+  format: markdown
+
+  # Include timestamps
+  timestamps: true
+  timestamp_granularity: paragraph  # paragraph | sentence | word
+
+  # Speaker diarization (requires pyannote)
+  speaker_labels: false
+
+  # Output directory
+  directory: _inbox/transcripts/
+
+# Audio preprocessing
+preprocessing:
+  # Normalize volume (requires ffmpeg)
+  normalize: true
+  # Target sample rate (16000 is optimal for Whisper)
+  sample_rate: 16000
+  # Convert to mono
+  mono: true
+
+# Cleanup
+cleanup:
+  # Archive processed files
+  archive_originals: true
+  archive_path: _processed/audio/
+  # Delete archived files after N days
+  retention_days: 30
+
+# Job queue persistence
+queue:
+  file: _index/transcription-jobs.json
+  retry_attempts: 3
+  backoff: exponential
+
+# Notifications
+notifications:
+  # Notify when transcription complete
+  on_complete: true
+  # Notify on error
+  on_error: true
+  # Channels to notify
+  channels: [telegram]

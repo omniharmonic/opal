@@ -1,0 +1,109 @@
+# Graph Visualization Configuration
+
+# Default settings
+defaults:
+  depth: 2
+  max_nodes: 200
+  layout: force-directed
+  show_orphans: false
+
+# Layout algorithms
+layout:
+  force_directed:
+    link_distance: 100
+    charge_strength: -300
+    center_strength: 0.1
+    collision_radius: 30
+    iterations: 300
+
+  radial:
+    radius_increment: 100
+    angle_spread: 360
+
+  hierarchical:
+    level_separation: 100
+    node_separation: 50
+
+# Visual encoding
+visual:
+  # Color nodes by type
+  color_by: type
+  color_scheme:
+    pattern: "#4CAF50"      # Green
+    protocol: "#2196F3"     # Blue
+    playbook: "#FF9800"     # Orange
+    primitive: "#9C27B0"    # Purple
+    framework: "#00BCD4"    # Cyan
+    artifact: "#795548"     # Brown
+    person: "#E91E63"       # Pink
+    organization: "#607D8B" # Blue Grey
+    activity: "#FFEB3B"     # Yellow
+    system: "#3F51B5"       # Indigo
+    utility: "#009688"      # Teal
+
+  # Size nodes by connection count
+  size_by: connections
+  size_range: [15, 50]
+
+  # Edge styling
+  edges:
+    color_by: type
+    implements: "#4CAF50"
+    extends: "#2196F3"
+    related_to: "#9E9E9E"
+    similar_to: "#B0BEC5"
+    contradicts: "#F44336"
+    builds_on: "#FF9800"
+    prerequisite: "#673AB7"
+
+    width_by: confidence
+    width_range: [1, 4]
+
+    show_arrows: true
+    arrow_size: 8
+
+  # Labels
+  labels:
+    show: true
+    font_size: 12
+    truncate_at: 25
+
+# Clustering
+clustering:
+  enabled: true
+  algorithm: louvain
+  group_by: sector
+  cluster_strength: 0.5
+
+# Interactivity
+interaction:
+  zoom:
+    enabled: true
+    min: 0.1
+    max: 10
+
+  pan:
+    enabled: true
+
+  hover:
+    highlight_connected: true
+    show_tooltip: true
+
+  click:
+    expand: true
+    navigate: false  # Don't navigate away
+
+  search:
+    enabled: true
+    highlight_matches: true
+
+# Export
+export:
+  formats: [json, svg, png]
+  output_dir: _assets/graphs/
+
+# For static site
+static_site:
+  include_global: true
+  include_local_per_entity: true
+  local_depth: 2

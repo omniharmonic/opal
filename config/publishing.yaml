@@ -1,0 +1,122 @@
+# Publishing Configuration
+# Static site generation and deployment
+
+# Site generator
+generator: quartz  # quartz | hugo
+
+# Site metadata
+site:
+  name: "Open Protocol Library"
+  description: "A knowledge commons for civic innovation"
+  domain: "commons.opencivics.co"
+  language: en
+  author: "Open Civic Commons"
+
+# Quartz configuration (if generator: quartz)
+quartz:
+  version: "4.x"
+  theme: default
+
+  # Features
+  features:
+    spa: true
+    popovers: true
+    search: true
+    darkMode: true
+
+  # Graph visualization
+  graph:
+    enabled: true
+    localGraph:
+      depth: 2
+      linkDistance: 30
+    globalGraph:
+      depth: 3
+
+  # Layout
+  layout:
+    left: [explorer, recentNotes]
+    right: [graph, tableOfContents, backlinks]
+    header: [search, darkMode]
+    footer: [credits]
+
+# Hugo configuration (if generator: hugo)
+hugo:
+  version: "0.120+"
+  theme: book  # book | geekdoc | docsy
+
+  # Taxonomies
+  taxonomies:
+    enabled: true
+    types: [sector, scale, tag, type]
+
+# Build settings
+build:
+  # Output directory
+  output: public/
+
+  # Minify output
+  minify: true
+
+  # Optimize images
+  optimize_images: true
+
+  # Generate sitemap
+  sitemap: true
+
+  # Generate RSS feed
+  rss: true
+
+  # Include graph data
+  graph_data: true
+
+  # Include API endpoints
+  api_endpoints: true
+
+# Content settings
+content:
+  # Require explicit publish flag
+  require_publish_flag: false
+
+  # Include drafts
+  include_drafts: false
+
+  # Excluded directories
+  exclude:
+    - _inbox/
+    - _staging/
+    - config/
+    - .claude/
+
+# Deployment
+deploy:
+  # Deployment method
+  method: github-pages  # github-pages | netlify | vercel | custom
+
+  # Auto-deploy on merge to main
+  auto_deploy: true
+
+  # GitHub Pages settings
+  github_pages:
+    branch: gh-pages
+    cname: commons.opencivics.co
+
+  # Netlify settings
+  netlify:
+    site_id: ""
+    build_hook: ""
+
+  # Vercel settings
+  vercel:
+    project: ""
+    org_id: ""
+
+  # Custom deployment
+  custom:
+    command: ""
+
+# Preview settings
+preview:
+  port: 1313
+  host: localhost
+  open_browser: true

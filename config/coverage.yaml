@@ -1,0 +1,91 @@
+# Coverage Analysis Configuration
+
+# Thresholds for status indicators
+thresholds:
+  excellent: 0.90
+  good: 0.70
+  fair: 0.50
+  gap: 0.30
+  critical: 0.10
+
+# Expected minimums per category
+expected:
+  per_sector: 15
+  per_scale: 12
+  per_type:
+    pattern: 25
+    protocol: 20
+    playbook: 15
+    primitive: 10
+    framework: 10
+    artifact: 10
+    person: 20
+    organization: 15
+    activity: 10
+    system: 5
+    utility: 5
+
+# Quality metrics
+quality:
+  # Freshness thresholds
+  fresh_days: 30
+  stale_days: 90
+
+  # Required fields for completeness
+  required_fields:
+    - title
+    - summary
+    - sectors
+    - scales
+
+  # Optional fields that count toward completeness
+  optional_fields:
+    - tags
+    - relationships
+    - source
+    - examples
+
+# Relationship health
+relationships:
+  # Flag entities with fewer connections
+  min_connections: 1
+  weak_threshold: 2
+  strong_threshold: 5
+
+# Reports
+reports:
+  output_dir: _reports/coverage/
+  formats: [markdown, json]
+  archive: true
+  archive_retention_days: 365
+
+# Scheduling
+schedule:
+  enabled: true
+  frequency: weekly
+  day: sunday
+  time: "00:00"
+  notify: true
+  channels: [email]
+
+# Comparison
+comparison:
+  # Keep snapshots for comparison
+  save_snapshots: true
+  snapshot_dir: _reports/coverage/snapshots/
+  snapshot_retention_days: 365
+
+# Alerts
+alerts:
+  enabled: true
+  triggers:
+    - type: coverage_drop
+      threshold: 0.05  # 5% drop
+      severity: warning
+
+    - type: new_critical_gap
+      severity: high
+
+    - type: orphan_increase
+      threshold: 5
+      severity: warning

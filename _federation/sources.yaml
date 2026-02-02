@@ -1,0 +1,16 @@
+# Federation Sources
+# Upstream repositories to subscribe to
+
+sources: []
+
+# Example:
+# sources:
+#   - name: open-protocol-library
+#     repo: omniharmonic/open-protocol-library
+#     branch: main
+#     subscribe_to:
+#       - patterns/*
+#       - protocols/*
+#     auto_merge: false
+#     translate_taxonomy: false
+#     last_sync: null

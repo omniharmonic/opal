@@ -1,0 +1,42 @@
+# OPAL Git Ignore
+
+# Secrets (NEVER commit)
+config/secrets.local
+*.local
+.env
+.env.*
+
+# Logs
+.opal/logs/
+*.log
+
+# Temporary files
+.opal/tmp/
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Node modules (if any scripts use npm)
+node_modules/
+
+# Python (if any scripts use Python)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Failed items (may contain sensitive data)
+_inbox/failed/
+
+# Setup progress (temporary)
+.opal-setup-progress.yaml

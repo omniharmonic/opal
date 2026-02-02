@@ -1,0 +1,133 @@
+# OPAL Governance Configuration
+# Democratic rules for commons mode
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PR Moderation
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+pr_moderation:
+  # Voting requirements
+  required_approvals: 3
+  rejection_blocks: true  # Any rejection blocks merge
+
+  # Voting period
+  voting_deadline_hours: 72
+  minimum_open_hours: 24
+
+  # Auto-merge when conditions met
+  auto_merge:
+    enabled: true
+    conditions:
+      - required_approvals_met
+      - no_rejections
+      - minimum_open_hours_elapsed
+      - all_checks_passing
+
+  # Who can vote
+  voters: github_contributors  # Anyone with push access to repo
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Vote Tracking
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+voting:
+  # How votes are recorded
+  method: pr_comments  # Uses structured comments on PRs
+
+  # Vote types
+  types:
+    approve:
+      label: "✅ APPROVE"
+      weight: 1
+    reject:
+      label: "❌ REJECT"
+      weight: -999  # Blocks
+    abstain:
+      label: "⬜ ABSTAIN"
+      weight: 0
+
+  # Authors cannot vote on their own PRs
+  author_can_vote: false
+
+  # Allow changing votes
+  allow_vote_change: true
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Notifications
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+notifications:
+  # Notify on new PR
+  on_new_pr:
+    enabled: true
+    message: "New PR needs review: {pr_title}"
+    channels: [email, telegram]
+
+  # Notify when ready to merge
+  on_ready_to_merge:
+    enabled: true
+    message: "PR #{pr_number} has enough votes and is ready to merge"
+    channels: [email]
+
+  # Remind voters
+  voting_reminder:
+    enabled: true
+    hours_before_deadline: 24
+    message: "Reminder: PR #{pr_number} voting ends in {hours} hours"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Content Guidelines
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+content_guidelines:
+  # Require source attribution
+  require_source: true
+
+  # Minimum content quality
+  require_description: true
+  min_description_length: 50
+
+  # Require classification
+  require_sectors: true
+  require_scales: false
+
+  # License for contributed content
+  default_license: CC-BY-SA-4.0
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Rejection Handling
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+rejection:
+  # Require reason for rejection
+  require_reason: true
+  min_reason_length: 20
+
+  # After rejection
+  resolution_process: |
+    When a PR is rejected:
+    1. Author addresses feedback
+    2. Requests re-review
+    3. Rejection vote is cleared
+    4. New voting period begins
+
+  # Clear rejections on update
+  clear_on_update: true
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Merge Policies
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+merge:
+  # Default merge strategy
+  strategy: squash  # merge | squash | rebase
+
+  # Post-merge actions
+  post_merge:
+    - update_entity_index
+    - sync_to_notion
+    - update_federation_outbox
+    - notify_subscribers
+
+  # Branch cleanup
+  delete_branch_on_merge: true

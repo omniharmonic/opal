@@ -1,0 +1,94 @@
+{
+  "version": "1.0.0",
+  "created": "2026-02-01T00:00:00Z",
+  "last_updated": "2026-02-02T10:00:00Z",
+  "entity_count": 5,
+  "entities": {
+    "pattern-consent-based-decision-making": {
+      "id": "pattern-consent-based-decision-making",
+      "title": "Consent-Based Decision Making",
+      "type": "pattern",
+      "path": "patterns/consent-based-decision-making.md",
+      "sectors": [
+        "governance-and-political-systems",
+        "civic-engagement-and-participation-systems"
+      ],
+      "scales": ["neighborhood", "municipal", "bioregional"],
+      "tags": ["decision-making", "governance", "participation", "consent"],
+      "status": "published",
+      "created_at": "2026-01-15T10:00:00Z",
+      "updated_at": "2026-01-28T14:30:00Z",
+      "contributors": ["james-wilson", "maria-chen"],
+      "confidence": 0.95
+    },
+    "protocol-sociocracy": {
+      "id": "protocol-sociocracy",
+      "title": "Sociocracy",
+      "type": "protocol",
+      "path": "protocols/sociocracy.md",
+      "sectors": [
+        "governance-and-political-systems",
+        "economic-and-resource-sharing-systems"
+      ],
+      "scales": ["neighborhood", "municipal", "bioregional"],
+      "tags": ["governance", "organization", "circles", "consent", "democracy"],
+      "status": "published",
+      "created_at": "2026-01-10T09:00:00Z",
+      "updated_at": "2026-01-25T11:30:00Z",
+      "contributors": ["david-kim", "maria-chen"],
+      "confidence": 0.92
+    },
+    "protocol-participatory-budgeting": {
+      "id": "protocol-participatory-budgeting",
+      "title": "Participatory Budgeting",
+      "type": "protocol",
+      "path": "protocols/participatory-budgeting.md",
+      "sectors": [
+        "governance-and-political-systems",
+        "economic-and-resource-sharing-systems",
+        "civic-engagement-and-participation-systems"
+      ],
+      "scales": ["neighborhood", "municipal", "national"],
+      "tags": ["budgeting", "participation", "democracy", "public-finance", "voting"],
+      "status": "published",
+      "created_at": "2026-01-12T14:00:00Z",
+      "updated_at": "2026-01-30T16:00:00Z",
+      "contributors": ["priya-patel", "sarah-martinez"],
+      "confidence": 0.89
+    },
+    "person-maria-chen": {
+      "id": "person-maria-chen",
+      "title": "Maria Chen",
+      "type": "person",
+      "path": "people/maria-chen.md",
+      "sectors": [
+        "governance-and-political-systems",
+        "civic-engagement-and-participation-systems"
+      ],
+      "scales": ["neighborhood", "municipal"],
+      "tags": ["facilitator", "governance", "community-organizing"],
+      "status": "published",
+      "created_at": "2026-01-20T09:00:00Z",
+      "updated_at": "2026-01-28T14:30:00Z",
+      "contributors": ["admin"],
+      "confidence": 1.0
+    },
+    "organization-neighborhood-governance-council": {
+      "id": "organization-neighborhood-governance-council",
+      "title": "Neighborhood Governance Council",
+      "type": "organization",
+      "path": "organizations/neighborhood-governance-council.md",
+      "sectors": [
+        "governance-and-political-systems",
+        "civic-engagement-and-participation-systems"
+      ],
+      "scales": ["neighborhood"],
+      "tags": ["governance", "neighborhood", "council", "local-democracy"],
+      "status": "published",
+      "created_at": "2026-01-18T11:00:00Z",
+      "updated_at": "2026-01-30T10:00:00Z",
+      "contributors": ["admin"],
+      "confidence": 1.0
+    }
+  }
+}

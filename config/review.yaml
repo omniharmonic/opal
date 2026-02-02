@@ -1,0 +1,59 @@
+# Review Configuration
+
+# Batch review settings
+batch:
+  default_sort: confidence
+  items_per_page: 20
+  show_source: true
+  show_relationships: true
+  show_excerpts: true
+  excerpt_length: 200
+
+# Auto-suggestions
+suggestions:
+  enabled: true
+  auto_accept_threshold: 0.95
+  auto_reject_threshold: 0.40
+  show_similar_entities: true
+  max_similar: 3
+
+# Display settings
+display:
+  compact_mode: false
+  vim_navigation: true
+  show_confidence_bar: true
+  color_by_confidence: true
+
+# Keyboard shortcuts
+keyboard:
+  vim_mode: true
+  custom_bindings: {}
+
+# Behavior
+behavior:
+  confirm_bulk_actions: true
+  undo_enabled: true
+  undo_limit: 50
+  auto_save: true
+  auto_save_interval: 5
+
+# Session management
+session:
+  save_on_quit: true
+  offer_resume: true
+  session_file: _staging/.review-session.json
+  timeout_minutes: 60
+
+# Merge settings
+merge:
+  similarity_threshold: 0.85
+  auto_detect: true
+  show_diff: true
+  preserve_relationships: true
+
+# Quality checks
+quality:
+  require_sectors: true
+  require_scales: true
+  warn_incomplete: true
+  validate_relationships: true

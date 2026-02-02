@@ -1,0 +1,151 @@
+# OPAL Integrations Configuration
+# API keys stored separately in secrets.local
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Notion Integration
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+notion:
+  enabled: true
+  prefer_mcp: true  # Use MCP server if available
+
+  # Commons mode: Notion mirrors GitHub
+  mode: frontend  # frontend | workspace | disabled
+
+  # Workspace configuration
+  workspace_id_env: NOTION_WORKSPACE_ID
+
+  # Database mapping (auto-discovered or manual)
+  databases:
+    patterns: null      # Will be auto-discovered
+    protocols: null
+    playbooks: null
+    # ... etc
+
+  # Sync settings
+  sync:
+    direction: push  # push | pull | bidirectional
+    on_merge: true   # Sync after PR merge
+    interval_minutes: 0  # 0 = manual only
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# GitHub Integration
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+github:
+  enabled: true
+  prefer_mcp: true
+
+  # Authentication (uses gh CLI or token)
+  auth_method: gh_cli  # gh_cli | token
+
+  # Repository
+  owner: omniharmonic
+  repo: open-protocol-library
+
+  # PR settings
+  pr:
+    template: .github/PULL_REQUEST_TEMPLATE.md
+    labels:
+      new_pattern: ["new-pattern", "needs-review"]
+      new_protocol: ["new-protocol", "needs-review"]
+      update: ["update"]
+      merge: ["entity-merge", "needs-review"]
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Transcript Sources
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+otter:
+  enabled: true
+  prefer_mcp: true
+  api_key_env: OTTER_API_KEY
+
+  # Ingestion settings
+  workspaces: []  # Empty = all workspaces
+  filters:
+    exclude_titles:
+      - "standup"
+      - "1:1"
+      - "daily sync"
+    min_duration_minutes: 10
+    max_age_days: 30
+
+fathom:
+  enabled: false
+  prefer_mcp: true
+  api_key_env: FATHOM_API_KEY
+
+  filters:
+    min_duration_minutes: 10
+    max_age_days: 30
+
+readai:
+  enabled: false
+  prefer_mcp: true
+  api_key_env: READAI_API_KEY
+
+  filters:
+    min_duration_minutes: 10
+    max_age_days: 30
+
+meetily:
+  enabled: false
+  prefer_mcp: false  # Local only
+
+  # Path to Meetily SQLite database
+  database_path: ~/Library/Application Support/Meetily/meetily.db
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Communication
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+telegram:
+  enabled: false
+  bot_token_env: TELEGRAM_BOT_TOKEN
+
+  # Channels to monitor for links
+  channels: []
+
+  # Link ingestion settings
+  ingestion:
+    auto_fetch: true  # Automatically fetch link content
+    categories:
+      - articles
+      - papers
+      - tools
+      - resources
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Google Suite
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+google:
+  enabled: false
+  prefer_mcp: true
+
+  # OAuth credentials
+  credentials_env: GOOGLE_CREDENTIALS
+
+  # Services to enable
+  services:
+    docs: false
+    calendar: false
+    gmail: false
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# MCP Server Configuration
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+mcp:
+  # Prefer MCP servers over direct API when available
+  prefer_mcp: true
+
+  # Fallback to API if MCP unavailable
+  fallback_to_api: true
+
+  # MCP server endpoints (auto-discovered or manual)
+  servers:
+    notion: null  # Auto-discover
+    github: null
+    # Add custom MCP servers here

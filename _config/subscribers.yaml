@@ -1,0 +1,27 @@
+# Digest Subscribers
+# Manage who receives activity digests
+
+# Daily digest subscribers (active contributors)
+daily: []
+# Example:
+# daily:
+#   - email: "contributor@example.com"
+#     name: "Active Contributor"
+#   - telegram: "@contributor_handle"
+
+# Weekly digest subscribers
+weekly: []
+# Example:
+# weekly:
+#   - email: "reader@example.com"
+#     name: "Regular Reader"
+
+# Monthly digest subscribers
+monthly: []
+# Example:
+# monthly:
+#   - email: "occasional@example.com"
+#     name: "Occasional Reader"
+
+# All subscribers (receive announcements, not regular digests)
+announcements: []

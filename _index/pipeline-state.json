@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "mode": "commons",
+  "current_batch": "batch-2026-02-02-001",
+  "items": {
+    "sample-meeting-governance.md": {
+      "status": "staged",
+      "classified_as": "transcript",
+      "extracted_entities": 11,
+      "new_entities": 7,
+      "matched_existing": 4,
+      "processed_at": "2026-02-02T12:00:00Z"
+    },
+    "sample-podcast-commons.md": {
+      "status": "staged",
+      "classified_as": "transcript",
+      "extracted_entities": 19,
+      "new_entities": 17,
+      "matched_existing": 2,
+      "processed_at": "2026-02-02T12:00:00Z"
+    }
+  },
+  "pending_reviews": 10,
+  "pending_prs": 0,
+  "last_commit": null,
+  "last_notion_sync": null,
+  "last_federation_sync": null,
+  "statistics": {
+    "total_processed": 2,
+    "total_entities": 30,
+    "total_commits": 0
+  }
+}

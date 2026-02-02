@@ -1,0 +1,152 @@
+# OPAL LLM Configuration
+# Routing tasks to appropriate language models
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Provider Configuration
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+providers:
+  claude:
+    enabled: true
+    # Uses Claude Code's built-in Claude access
+    # No additional configuration needed
+
+  ollama:
+    enabled: true
+    endpoint: http://localhost:11434
+
+    # Available models (must be pulled locally)
+    models:
+      - name: llama3.2:70b
+        context_length: 8192
+        use_for: [extraction, complex_reasoning]
+
+      - name: llama3.2:7b
+        context_length: 4096
+        use_for: [classification, simple_tasks]
+
+      - name: mistral:7b
+        context_length: 8192
+        use_for: [cleanup, preprocessing]
+
+    # Connection settings
+    timeout_seconds: 120
+    retry_attempts: 2
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Task Routing
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+routing:
+  # Simple tasks → Ollama (fast, cheap)
+  classify:
+    primary: ollama
+    model: llama3.2:7b
+    fallback: claude
+
+  cleanup_transcript:
+    primary: ollama
+    model: mistral:7b
+    fallback: claude
+
+  # Complex tasks → Claude (quality critical)
+  extract_entities:
+    primary: claude
+    fallback: ollama
+    fallback_model: llama3.2:70b
+
+  reconcile:
+    primary: claude
+    fallback: ollama
+    fallback_model: llama3.2:70b
+
+  generate_wiki:
+    primary: claude
+    fallback: ollama
+    fallback_model: llama3.2:70b
+
+  semantic_match:
+    primary: claude
+    fallback: ollama
+    fallback_model: llama3.2:70b
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Fallback Behavior
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+fallback:
+  # When to fallback
+  on_error: true
+  on_timeout: true
+  on_rate_limit: true
+
+  # Notify user when falling back
+  notify: true
+  notify_message: "Using {fallback_model} instead of {primary_model}"
+
+  # For critical tasks, require confirmation
+  confirm_for_critical: true
+  critical_tasks:
+    - extract_entities
+    - reconcile
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Prompt Optimization
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+prompts:
+  # Adjust prompts for different models
+  ollama_adjustments:
+    # Add more examples for smaller models
+    extra_examples: true
+    example_count: 3
+
+    # Simplify output schemas
+    simplified_schema: true
+
+    # Be more explicit about format
+    explicit_formatting: true
+
+  # Token limits
+  max_input_tokens:
+    claude: 100000
+    ollama: 4000  # Conservative for local models
+
+  max_output_tokens:
+    claude: 4096
+    ollama: 2048
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Cost Management
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+cost:
+  # Prefer Ollama to save costs
+  prefer_local: true
+
+  # Use Claude only for quality-critical tasks
+  claude_only_for:
+    - extract_entities
+    - reconcile
+    - generate_wiki
+
+  # Track usage
+  track_usage: true
+  usage_log: .opal/logs/llm-usage.log
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Quality Settings
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+quality:
+  # Temperature settings by task
+  temperature:
+    classification: 0.1  # Deterministic
+    cleanup: 0.3         # Some variation OK
+    extraction: 0.2      # Mostly deterministic
+    generation: 0.7      # More creative
+
+  # Validation
+  validate_output: true
+  retry_on_invalid: true
+  max_retries: 2
