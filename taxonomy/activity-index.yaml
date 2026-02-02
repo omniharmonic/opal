@@ -1,0 +1,348 @@
+# Activity Index Taxonomy
+# Schema for indexing civic activities and resources
+# Compatible with OpenCivics Activity Index Bot
+
+name: Activity Index
+version: "1.0.0"
+description: |
+  A taxonomy for categorizing civic activities, events, opportunities,
+  and resources. Designed for monitoring community channels and indexing
+  shared links into actionable categories.
+
+# Resource Types
+# Based on OpenCivics Activity Index Bot categories
+resource_types:
+  - id: grant
+    name: Grant
+    plural: Grants
+    description: |
+      Funding opportunities including grants, fellowships, awards,
+      and other financial support for civic projects.
+    directory: activities/grants/
+    icon: "💰"
+    keywords:
+      - grant
+      - funding
+      - fellowship
+      - award
+      - stipend
+      - scholarship
+      - RFP
+      - request for proposals
+      - funding opportunity
+      - financial support
+    fields:
+      - name: deadline
+        type: date
+        required: true
+      - name: amount
+        type: string
+        required: false
+      - name: eligibility
+        type: text
+        required: false
+      - name: funder
+        type: string
+        required: false
+      - name: application_url
+        type: url
+        required: true
+
+  - id: initiative
+    name: Initiative
+    plural: Initiatives
+    description: |
+      Ongoing projects, campaigns, programs, or coordinated efforts
+      working toward civic goals.
+    directory: activities/initiatives/
+    icon: "🚀"
+    keywords:
+      - initiative
+      - project
+      - campaign
+      - program
+      - effort
+      - movement
+      - pilot
+      - launch
+    fields:
+      - name: status
+        type: enum
+        options: [planning, active, completed, paused]
+        required: true
+      - name: organizer
+        type: string
+        required: false
+      - name: location
+        type: string
+        required: false
+      - name: website
+        type: url
+        required: false
+
+  - id: alliance
+    name: Alliance
+    plural: Alliances
+    description: |
+      Coalitions, partnerships, consortiums, networks, and other
+      collaborative structures between organizations.
+    directory: activities/alliances/
+    icon: "🤝"
+    keywords:
+      - alliance
+      - coalition
+      - partnership
+      - consortium
+      - network
+      - collective
+      - federation
+      - collaboration
+      - working group
+    fields:
+      - name: members
+        type: list
+        required: false
+      - name: formed
+        type: date
+        required: false
+      - name: focus_area
+        type: string
+        required: false
+      - name: membership_url
+        type: url
+        required: false
+
+  - id: course
+    name: Course
+    plural: Courses
+    description: |
+      Educational offerings including courses, trainings, workshops,
+      webinars, bootcamps, and learning programs.
+    directory: activities/courses/
+    icon: "📚"
+    keywords:
+      - course
+      - training
+      - workshop
+      - webinar
+      - class
+      - bootcamp
+      - certification
+      - learning
+      - education
+      - curriculum
+      - module
+    fields:
+      - name: format
+        type: enum
+        options: [online, in-person, hybrid, self-paced]
+        required: true
+      - name: duration
+        type: string
+        required: false
+      - name: cost
+        type: string
+        required: false
+      - name: provider
+        type: string
+        required: false
+      - name: registration_url
+        type: url
+        required: false
+      - name: start_date
+        type: date
+        required: false
+
+  - id: gathering
+    name: Gathering
+    plural: Gatherings
+    description: |
+      Events, conferences, summits, meetups, assemblies, and other
+      in-person or virtual gatherings.
+    directory: activities/gatherings/
+    icon: "🎪"
+    keywords:
+      - event
+      - conference
+      - summit
+      - meetup
+      - gathering
+      - assembly
+      - forum
+      - symposium
+      - convention
+      - retreat
+      - hackathon
+      - festival
+    fields:
+      - name: date
+        type: date
+        required: true
+      - name: end_date
+        type: date
+        required: false
+      - name: location
+        type: string
+        required: true
+      - name: format
+        type: enum
+        options: [in-person, virtual, hybrid]
+        required: true
+      - name: registration_url
+        type: url
+        required: false
+      - name: organizer
+        type: string
+        required: false
+      - name: cost
+        type: string
+        required: false
+
+  - id: map
+    name: Map
+    plural: Maps
+    description: |
+      Directories, registries, databases, indexes, and other mapping
+      or cataloging resources.
+    directory: activities/maps/
+    icon: "🗺️"
+    keywords:
+      - map
+      - directory
+      - registry
+      - database
+      - index
+      - catalog
+      - inventory
+      - listing
+      - atlas
+      - landscape
+    fields:
+      - name: coverage
+        type: string
+        required: false
+        description: Geographic or topical coverage
+      - name: entries
+        type: number
+        required: false
+      - name: maintainer
+        type: string
+        required: false
+      - name: last_updated
+        type: date
+        required: false
+
+  - id: resource
+    name: Resource
+    plural: Resources
+    description: |
+      Tools, guides, templates, toolkits, frameworks, and other
+      practical resources for civic work.
+    directory: activities/resources/
+    icon: "🧰"
+    keywords:
+      - resource
+      - tool
+      - guide
+      - template
+      - toolkit
+      - framework
+      - handbook
+      - manual
+      - playbook
+      - checklist
+      - how-to
+    fields:
+      - name: format
+        type: enum
+        options: [document, tool, template, video, interactive]
+        required: false
+      - name: author
+        type: string
+        required: false
+      - name: license
+        type: string
+        required: false
+
+  - id: member-update
+    name: Member Update
+    plural: Member Updates
+    description: |
+      News, announcements, and updates from community members
+      about their work, transitions, or achievements.
+    directory: activities/updates/
+    icon: "📢"
+    keywords:
+      - announcement
+      - update
+      - news
+      - hiring
+      - job
+      - transition
+      - launch
+      - milestone
+      - achievement
+    fields:
+      - name: update_type
+        type: enum
+        options: [announcement, job, milestone, transition, other]
+        required: true
+      - name: person
+        type: string
+        required: false
+      - name: organization
+        type: string
+        required: false
+      - name: date
+        type: date
+        required: false
+
+# Classification hints for Claude
+classification:
+  instructions: |
+    When classifying content against the Activity Index taxonomy:
+
+    1. Look for temporal indicators (dates, deadlines) → likely Gathering or Grant
+    2. Look for funding language (amount, eligibility) → likely Grant
+    3. Look for educational language (learn, training) → likely Course
+    4. Look for collaborative language (coalition, partners) → likely Alliance
+    5. Look for directory/listing language (database, registry) → likely Map
+    6. Look for practical utility language (template, toolkit) → likely Resource
+    7. Look for project/campaign language (initiative, pilot) → likely Initiative
+    8. Look for personal news language (hiring, transition) → likely Member Update
+
+    If content could fit multiple categories, prefer:
+    - The most specific category
+    - The category with the strongest keyword matches
+    - The category most useful for the user's likely intent
+
+  confidence_hints:
+    high_confidence:
+      - "Contains specific deadline date" → Grant or Gathering
+      - "Mentions funding amount" → Grant
+      - "Contains registration URL" → Gathering or Course
+      - "Lists member organizations" → Alliance
+      - "Is a searchable database" → Map
+
+    medium_confidence:
+      - "Discusses ongoing work" → Initiative or Alliance
+      - "Provides instructions" → Resource or Course
+      - "Announces something new" → Member Update or Initiative
+
+# Relationship to OPL
+interoperability:
+  opl_mapping:
+    # Activity Index types that may also be OPL types
+    resource: pattern  # Resources may describe patterns
+    course: playbook   # Courses may be playbooks
+    initiative: protocol  # Initiatives may follow protocols
+
+  # When both taxonomies could apply
+  dual_classification: |
+    Some content may be classified under both Activity Index and OPL:
+    - A "Resource" about governance may also be a "Pattern"
+    - A "Course" on facilitation may reference "Protocols"
+
+    When this occurs, create the primary classification based on
+    source context (e.g., Telegram links default to Activity Index)
+    and add cross-references to related OPL entities.

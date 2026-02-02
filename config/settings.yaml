@@ -26,9 +26,40 @@ repository:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 taxonomy:
-  preset: opl  # Use Open Protocol Library preset
-  file: taxonomy/opl.yaml
-  # For custom: preset: custom, file: taxonomy/custom.yaml
+  # Primary taxonomy for the commons
+  primary: opl
+
+  # Available taxonomies
+  taxonomies:
+    opl:
+      name: Open Protocol Library
+      file: taxonomy/opl.yaml
+      enabled: true
+
+    activity-index:
+      name: Activity Index
+      file: taxonomy/activity-index.yaml
+      enabled: true
+      description: |
+        Civic activities schema for grants, initiatives,
+        gatherings, courses, alliances, maps, and resources.
+
+    # Custom taxonomies can be added here
+    # custom:
+    #   name: My Custom Taxonomy
+    #   file: taxonomy/custom.yaml
+    #   enabled: false
+
+  # Classification behavior
+  classification:
+    # Allow entities to be classified under multiple taxonomies
+    allow_multi_taxonomy: true
+
+    # Minimum confidence to consider a taxonomy match
+    min_confidence: 0.7
+
+    # When multi-taxonomy is enabled, create cross-references
+    create_cross_references: true
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Processing Settings
@@ -64,6 +95,8 @@ entity_index:
   path: _index/entities.json
   aliases_path: _index/aliases.json
   relationships_path: _index/relationships.json
+  sync_state_path: _index/sync-state.json
+  pipeline_state_path: _index/pipeline-state.json
 
   # Deduplication settings
   fuzzy_match_threshold: 3  # Max Levenshtein distance
