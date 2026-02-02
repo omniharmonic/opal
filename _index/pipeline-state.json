@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "mode": "commons",
-  "current_batch": "batch-2026-02-02-001",
+  "current_batch": "batch-2026-02-02-002",
   "items": {
     "sample-meeting-governance.md": {
       "status": "staged",
@@ -18,16 +18,67 @@
       "new_entities": 17,
       "matched_existing": 2,
       "processed_at": "2026-02-02T12:00:00Z"
+    },
+    "audio.mp4": {
+      "status": "staged",
+      "pipeline_steps": {
+        "classify": {
+          "completed": true,
+          "result": "audio",
+          "confidence": 0.98,
+          "completed_at": "2026-02-02T14:30:00Z"
+        },
+        "preprocess": {
+          "completed": true,
+          "transcription_model": "whisper-turbo",
+          "language": "en",
+          "segments": 402,
+          "duration_seconds": 1517,
+          "output": "_inbox/transcripts/audio-meeting-transcript.md",
+          "completed_at": "2026-02-02T14:35:00Z"
+        },
+        "extract": {
+          "completed": true,
+          "entities_found": 8,
+          "new_entities": 6,
+          "matched_existing": 2,
+          "completed_at": "2026-02-02T14:45:00Z"
+        },
+        "reconcile": {
+          "completed": true,
+          "aliases_added": 8,
+          "merges_proposed": 0,
+          "completed_at": "2026-02-02T15:00:00Z"
+        },
+        "stage": {
+          "completed": true,
+          "new_files": 2,
+          "update_files": 1,
+          "completed_at": "2026-02-02T15:00:00Z"
+        },
+        "notify": {
+          "completed": true,
+          "federation_outbox": "skipped (no federation configured)",
+          "completed_at": "2026-02-02T15:00:00Z"
+        }
+      },
+      "classified_as": "audio",
+      "transcription_model": "whisper-turbo",
+      "language": "en",
+      "extracted_entities": 8,
+      "new_entities": 6,
+      "matched_existing": 2,
+      "processed_at": "2026-02-02T15:00:00Z"
     }
   },
-  "pending_reviews": 10,
+  "pending_reviews": 13,
   "pending_prs": 0,
   "last_commit": null,
   "last_notion_sync": null,
   "last_federation_sync": null,
   "statistics": {
-    "total_processed": 2,
-    "total_entities": 30,
+    "total_processed": 3,
+    "total_entities": 38,
     "total_commits": 0
   }
 }
