@@ -13,6 +13,152 @@ Show the current state of the knowledge commons.
 /status integrations # Integration health
 ```
 
+---
+
+## EXECUTION INSTRUCTIONS
+
+When this command is invoked, execute these steps IN ORDER using the specified tools.
+
+### Step 1: Determine Scope
+
+Parse any arguments to determine which status to show:
+- No argument → Full status (execute all substeps)
+- `inbox` → Only Step 2
+- `staging` → Only Step 3
+- `github` → Only Step 4
+- `index` → Only Step 5
+- `integrations` → Only Step 6
+
+### Step 2: Inbox Status
+
+**Action:** Use Glob tool to scan inbox directories.
+
+1. Use Glob with patterns:
+   - `_inbox/transcripts/**/*.md` → transcripts
+   - `_inbox/links/**/*.md` → links
+   - `_inbox/documents/**/*` → documents
+   - `_inbox/feeds/**/*.md` → feeds
+
+2. For each file found, note the modification time to determine age
+
+3. Count files by subdirectory
+
+**Output:**
+```
+📥 Inbox: {N} items awaiting processing
+   ├── {n} transcripts
+   ├── {n} links
+   ├── {n} documents
+   └── Oldest: {age} ago
+```
+
+### Step 3: Staging Status
+
+**Action:** Use Glob tool to scan staging directories.
+
+1. Use Glob with patterns:
+   - `_staging/new/**/*.md` → new entities
+   - `_staging/updates/*.yaml` → updates
+   - `_staging/merges/*.yaml` → merges
+
+2. Read `_index/pipeline-state.json` to get additional context
+
+3. Count files by type
+
+**Output:**
+```
+📝 Staging: {N} items awaiting review
+   ├── {n} new entities
+   ├── {n} updates to existing
+   ├── {n} potential merges
+   └── Ready for: /review
+```
+
+### Step 4: GitHub Status (if git repo)
+
+**Action:** Use Bash tool for git operations.
+
+1. Check if directory is a git repository:
+   ```bash
+   git rev-parse --git-dir 2>/dev/null
+   ```
+
+2. If git repo, run:
+   ```bash
+   git status --porcelain
+   git log -1 --format="%H %s" origin/main 2>/dev/null
+   gh pr list --json number,title,author,reviewDecision,reviews --limit 5 2>/dev/null
+   ```
+
+3. Parse results to show:
+   - Branch status
+   - Uncommitted changes
+   - Open PRs and their approval status
+
+**Output:**
+```
+🔀 GitHub: {status}
+   ├── Branch: {branch} ({status})
+   ├── Uncommitted: {n} files
+   └── Open PRs: {n}
+```
+
+### Step 5: Entity Index Status
+
+**Action:** Use Read tool to load entity index.
+
+1. Read `_index/entities.json`
+
+2. Count entities by type from the statistics section
+
+3. Get last_updated timestamp
+
+**Output:**
+```
+📊 Entity Index
+   ├── Total entities: {N}
+   ├── By type: {breakdown}
+   ├── Last updated: {timestamp}
+   └── Index health: ✅ Good
+```
+
+### Step 6: Integration Health (if full status)
+
+**Action:** Check configuration and connectivity.
+
+1. Read `config/integrations.yaml` or `.opal/sources.yaml`
+
+2. For enabled integrations, check basic connectivity:
+   - Notion: Check if token is configured
+   - GitHub: Already checked in Step 4
+   - Local sources: Check if paths exist
+
+**Output:**
+```
+🔌 Integrations
+   ├── {source}: {status}
+   └── ...
+```
+
+### Step 7: Suggested Actions
+
+Based on the status gathered, suggest next actions:
+
+- If inbox has items → suggest `/process`
+- If staging has items → suggest `/review`
+- If uncommitted changes → suggest `/github commit`
+- If PRs need votes → suggest `/github vote`
+
+**Output:**
+```
+━━━━━━━━━━━━━━━━━━━━━
+Suggested actions:
+• {action1}
+• {action2}
+```
+
+---
+
 ## Full Status Output
 
 ```

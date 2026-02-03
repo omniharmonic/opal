@@ -13,6 +13,265 @@ Add content to the inbox for processing.
 /ingest clipboard          # Ingest from clipboard
 ```
 
+---
+
+## EXECUTION INSTRUCTIONS
+
+When this command is invoked, execute based on the subcommand provided.
+
+### Routing
+
+Parse the arguments to determine ingestion type:
+- `file <path>` → Execute File Flow
+- `url <url>` → Execute URL Flow
+- `transcript <source>` → Execute Transcript Flow
+- `telegram` → Execute Telegram Flow
+- `clipboard` → Execute Clipboard Flow
+- `<source>` (other) → Treat as source name, use appropriate flow
+
+---
+
+### File Flow
+
+**Action:** Use Read, Write, and Bash tools.
+
+**Step 1:** Validate file exists
+```bash
+test -f "{path}" && echo "exists" || echo "not found"
+```
+
+If not found:
+```
+⚠️ File not found: {path}
+```
+STOP.
+
+**Step 2:** Detect file type and classify
+
+Based on extension and path:
+- `.md` in transcripts/ → `_inbox/transcripts/`
+- `.pdf` → `_inbox/documents/`
+- `.md` with URL in content → `_inbox/links/`
+- Other → `_inbox/documents/`
+
+**Step 3:** Read file content
+
+Use Read tool to get file content.
+
+**Step 4:** Create inbox file
+
+Generate filename: `{original_name}` or `{date}-{slug}.md`
+
+Add frontmatter:
+```yaml
+---
+source: file
+source_path: {original_path}
+ingested: {timestamp}
+---
+```
+
+Use Write tool to save to appropriate inbox subdirectory.
+
+**Step 5:** Report success
+```
+📥 Ingested: {filename}
+   └── Saved to: {inbox_path}
+
+Next: Run /process to extract entities
+```
+
+---
+
+### URL Flow
+
+**Action:** Use WebFetch and Write tools.
+
+**Step 1:** Validate URL format
+
+Check URL is well-formed. If not:
+```
+⚠️ Invalid URL: {url}
+```
+STOP.
+
+**Step 2:** Fetch URL content
+
+Use WebFetch tool:
+```
+url: {url}
+prompt: "Extract the main content of this page. Return the title, author (if available), publication date (if available), and the full article/document text in markdown format."
+```
+
+**Step 3:** Classify content type
+
+Based on URL domain and content:
+- `arxiv.org` → research paper
+- `lu.ma`, `eventbrite.com` → event
+- `grants.gov` → grant
+- `youtube.com` → video (fetch transcript)
+- Default → article
+
+**Step 4:** Create inbox file
+
+Generate filename: `{domain}-{slug}-{date}.md`
+
+Add frontmatter:
+```yaml
+---
+source: url
+url: {url}
+fetched: {timestamp}
+content_type: {detected_type}
+title: {extracted_title}
+author: {if available}
+---
+```
+
+Write to `_inbox/links/`
+
+**Step 5:** Report success
+```
+📥 Ingested: {title}
+   ├── URL: {url}
+   ├── Type: {content_type}
+   └── Saved to: _inbox/links/{filename}
+
+Next: Run /process to extract entities
+```
+
+---
+
+### Transcript Flow
+
+**Action:** Use appropriate tools based on source.
+
+**Step 1:** Identify transcript source
+
+If `--all` flag, process all configured sources.
+Otherwise, use the specified source.
+
+**Step 2:** Fetch transcripts by source type
+
+**For meetily (local):**
+- Note: Would query SQLite database at known path
+- For now, report what would be fetched
+
+**For otter/fathom/readai:**
+- Note: Requires MCP server or API integration
+- If not configured, report:
+  ```
+  ⚠️ {source} not configured.
+  Run /sources add {source} to set up integration.
+  ```
+
+**Step 3:** For each transcript found
+
+1. Generate filename: `{meeting_title}-{date}.md`
+2. Format content with speaker labels
+3. Add frontmatter with source metadata
+4. Write to `_inbox/transcripts/`
+
+**Step 4:** Report results
+```
+📥 Ingested Transcripts
+━━━━━━━━━━━━━━━━━━━━━━
+
+Source: {source}
+
+[1] {meeting_title} - {date}
+    ├── Duration: {duration}
+    ├── Speakers: {count}
+    └── ✅ Saved to: _inbox/transcripts/{filename}
+
+[2] ...
+
+━━━━━━━━━━━━━━━━━━━━━━
+Ingested: {n} transcripts
+
+Next: Run /process to extract entities
+```
+
+---
+
+### Telegram Flow
+
+**Action:** Note current limitations.
+
+**Step 1:** Check Telegram configuration
+
+Read config to find bot token and channel settings.
+
+If not configured:
+```
+⚠️ Telegram not configured.
+Run /sources add telegram to set up the bot integration.
+```
+STOP.
+
+**Step 2:** Note integration requirement
+```
+📥 Telegram Ingestion
+
+⚠️ Telegram ingestion requires MCP server or bot integration.
+
+To set up:
+1. Create a bot via @BotFather
+2. Add bot token to config/secrets.local
+3. Add bot to channels to monitor
+
+Alternative: Copy message links manually
+/ingest url <telegram_message_url>
+```
+
+---
+
+### Clipboard Flow
+
+**Action:** Use Bash and Write tools.
+
+**Step 1:** Get clipboard content
+```bash
+pbpaste
+```
+
+If empty:
+```
+⚠️ Clipboard is empty.
+```
+STOP.
+
+**Step 2:** Classify content
+
+Analyze clipboard text:
+- If starts with `http` → Treat as URL, use URL Flow
+- If has speaker labels → Treat as transcript
+- Otherwise → Treat as note/clipping
+
+**Step 3:** Create inbox file
+
+Generate filename: `clipboard-{timestamp}.md`
+
+Add frontmatter:
+```yaml
+---
+source: clipboard
+ingested: {timestamp}
+---
+```
+
+Write to `_inbox/clippings/`
+
+**Step 4:** Report success
+```
+📥 Ingested from clipboard
+   └── Saved to: _inbox/clippings/{filename}
+
+Next: Run /process to extract entities
+```
+
+---
+
 ## Sources
 
 ### File Ingestion

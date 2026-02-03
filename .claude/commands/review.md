@@ -6,242 +6,345 @@ Review and approve staged changes before committing to the knowledge base.
 
 ```
 /review                    # Interactive review session
-/review --list             # List staged items
+/review --list             # List staged items without reviewing
 /review --item <path>      # Review specific item
-/review --approve-all      # Approve all (use with caution)
+/review --accept-all       # Accept all (REQUIRES CONFIRMATION)
 /review --type new         # Review only new entities
 /review --type merge       # Review only merges
 ```
 
-## What It Does
+---
 
-After `/process` stages changes, `/review` lets you:
+## EXECUTION INSTRUCTIONS
 
-1. **See proposed changes** - New entities, merges, updates
-2. **Accept or reject** - Each change individually
-3. **Edit before accepting** - Modify content
-4. **Understand rationale** - See why changes were proposed
+**⚠️ CRITICAL: This command MUST use AskUserQuestion for EACH item and WAIT for the user's response before proceeding. DO NOT batch approve. DO NOT skip the user interaction. This is the human-in-the-loop quality gate.**
 
-## Interactive Review Session
+### Step 1: Load Staging State
 
+**Action:** Use Glob and Read tools to find all staged items.
+
+1. Use Glob to find files:
+   ```
+   Glob pattern: "_staging/new/**/*.md"    → new entities
+   Glob pattern: "_staging/updates/*.yaml" → updates
+   Glob pattern: "_staging/merges/*.yaml"  → merges
+   ```
+
+2. Read `_index/pipeline-state.json` to check for resume state
+
+3. Build ordered list of items to review
+
+4. If `--list` flag: Display list and STOP (don't continue to review loop)
+
+5. If `--type` flag: Filter list to only that type
+
+**Output:**
 ```
-/review
-
 📝 Review Session
 ━━━━━━━━━━━━━━━━━
 
-8 items staged for review:
-├── 4 new entities
-├── 3 updates
-└── 1 potential merge
+{N} items staged for review:
+├── {n} new entities
+├── {n} updates
+└── {n} potential merges
+```
 
-Starting review...
+**If no items:**
+```
+📝 No items staged for review.
+Run /process first to stage items.
+```
+STOP here.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[1/8] NEW ENTITY: patterns/food-sovereignty.md
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+---
 
-Source: food-council-2026-01-28.md
-Confidence: 0.85
+### Step 2: Review Loop (BLOCKING)
+
+**For EACH item, execute Steps 2a-2c. DO NOT SKIP ANY ITEM.**
+
+Set `current_index = 0`
+
+**WHILE** `current_index < total_items`:
+
+#### Step 2a: Display Current Item
+
+Read the file at `items[current_index].path` and display:
+
+**For NEW entity:**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[{current_index + 1}/{total}] NEW {TYPE}: {filename}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Source: {source from frontmatter}
+Confidence: {extraction_confidence}
 
 Preview:
-┌─────────────────────────────────────────────
-│ ---
-│ type: pattern
-│ name: Food Sovereignty
-│ aliases: [food autonomy, community food control]
-│ sectors: [environmental-sustainability, economic-resource-sharing]
-│ scales: [neighborhood, bioregional]
-│ ---
-│
-│ # Food Sovereignty
-│
-│ A framework for communities to control their own food systems,
-│ including production, distribution, and consumption decisions...
-│
-│ ## Key Principles
-│ - Local control over food policy
-│ - Support for local producers
-│ - Community-based food access
+┌─────────────────────────────────────────────────
+│ {Show frontmatter}
+│ {Show first ~15 lines of content}
 │ ...
-└─────────────────────────────────────────────
+└─────────────────────────────────────────────────
 
-Related existing entities:
-• [[patterns/participatory-budgeting.md]] (related)
-• [[organizations/bioregional-food-council.md]] (source)
+Related entities: {list from frontmatter}
+```
 
-Actions:
-  [a] Accept - Add to knowledge base
-  [r] Reject - Discard with reason
-  [e] Edit   - Modify before accepting
-  [s] Skip   - Review later
-  [v] View   - See full content
-  [?] Help   - Show options
+**For UPDATE:**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[{current_index + 1}/{total}] UPDATE: {entity_id}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Choice: a
-
-✅ Accepted: patterns/food-sovereignty.md
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[2/8] UPDATE: patterns/participatory-budgeting.md
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Target file: {file_path}
+Source: {source}
 
 Proposed changes:
+{format each change from YAML}
+```
 
-+ Adding alias: "community budget process"
-+ Adding related pattern: food-sovereignty
-+ Adding mention from: food-council-2026-01-28.md
+**For MERGE:**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[{current_index + 1}/{total}] MERGE: "{source}" → "{target}"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Diff preview:
-┌─────────────────────────────────────────────
-│ aliases:
-│   - PB
-│   - community budgeting
-│ + - community budget process
-│
-│ related_patterns:
-│   - consensus-decision-making
-│ + - food-sovereignty
-└─────────────────────────────────────────────
-
-Actions: [a]ccept [r]eject [e]dit [s]kip [v]iew
-Choice: a
-
-✅ Accepted: Update to participatory-budgeting.md
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[5/8] MERGE: "Community Food Systems" → "Food Sovereignty"
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Proposed merge:
-
-Source: "Community Food Systems" (newly extracted)
-Target: "Food Sovereignty" (existing entity)
-
-Confidence: 0.82
-Rationale: Claude analysis indicates these describe the same
-concept with different terminology.
-
-Evidence:
-• Source text: "community food systems approach to local production"
-• Target desc: "framework for communities to control their own food"
+Confidence: {confidence}
+Rationale: {rationale}
 
 If merged:
-• "Community Food Systems" becomes alias of "Food Sovereignty"
-• Source mentions get linked to target entity
-• No content loss
-
-Actions:
-  [a] Accept merge
-  [r] Reject - Keep as separate entities
-  [e] Edit target before merging
-  [s] Skip - Decide later
-
-Choice: a
-
-✅ Merged: "Community Food Systems" → patterns/food-sovereignty.md
-   Added as alias to target entity
+• "{source}" becomes alias of "{target}"
+• Mentions linked to target
 ```
 
-## List Staged Items
+#### Step 2b: ASK USER FOR DECISION
+
+**⚠️ THIS STEP IS MANDATORY. USE AskUserQuestion AND WAIT.**
 
 ```
-/review --list
+Use AskUserQuestion tool with:
+  questions: [{
+    question: "What would you like to do with this item?",
+    header: "Action",
+    options: [
+      {label: "Accept", description: "Add to knowledge base"},
+      {label: "Reject", description: "Discard with reason"},
+      {label: "Edit", description: "Modify before accepting"},
+      {label: "Skip", description: "Review later"}
+    ],
+    multiSelect: false
+  }]
+```
 
+**WAIT FOR THE USER TO RESPOND. DO NOT PROCEED UNTIL RESPONSE RECEIVED.**
+
+#### Step 2c: Process Response
+
+Based on user's answer:
+
+**If "Accept":**
+1. Determine destination directory from entity type
+2. Copy/move file from staging to knowledge base:
+   - For new: `_staging/new/{type}/{file}` → `{type}/{file}`
+   - For update: Apply changes to existing file using Edit tool
+   - For merge: Update target entity, add alias
+3. Output: `✅ Accepted: {filename}`
+4. Record in accepted list
+
+**If "Reject":**
+1. Ask for reason using AskUserQuestion:
+   ```
+   questions: [{
+     question: "Why are you rejecting this?",
+     header: "Reason",
+     options: [
+       {label: "Duplicate", description: "Already exists"},
+       {label: "Incorrect", description: "Extraction error"},
+       {label: "Not relevant", description: "Doesn't belong"},
+       {label: "Needs work", description: "Good idea, needs manual creation"}
+     ],
+     multiSelect: false
+   }]
+   ```
+2. Move to `_staging/rejected/`
+3. Output: `❌ Rejected: {filename} - {reason}`
+4. Record in rejected list
+
+**If "Edit":**
+1. Show full content of file
+2. Ask what to change using AskUserQuestion:
+   ```
+   questions: [{
+     question: "What would you like to edit?",
+     header: "Edit",
+     options: [
+       {label: "Name/Title", description: "Change entity name"},
+       {label: "Type", description: "Change entity type"},
+       {label: "Content", description: "Edit description/body"},
+       {label: "Done", description: "Finish editing, accept"}
+     ],
+     multiSelect: false
+   }]
+   ```
+3. If Name: Ask for new name, update frontmatter
+4. If Type: Show types, ask for selection, update
+5. If Content: Ask what to change, apply edit
+6. If Done: Proceed to Accept flow
+7. Loop back to edit options until Done
+
+**If "Skip":**
+1. Leave file in staging
+2. Output: `⏭️ Skipped: {filename}`
+3. Record in skipped list
+
+**After processing response:**
+- Increment `current_index`
+- Continue loop (go back to Step 2a for next item)
+
+**END WHILE**
+
+---
+
+### Step 3: Update Entity Index
+
+After ALL items reviewed, for each accepted item:
+
+1. Read `_index/entities.json`
+2. For each new entity:
+   - Generate ID: slugify(canonical_name)
+   - Add entry with all metadata
+3. For each update:
+   - Update existing entry
+4. Update statistics
+5. Write back using Write tool
+
+---
+
+### Step 4: Cleanup and Summary
+
+1. Update `_index/pipeline-state.json`:
+   - Clear processed items from staging lists
+   - Record review results
+   - Set timestamp
+
+2. Display summary:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Review Session Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Results:
+├── ✅ Accepted: {n}
+├── ❌ Rejected: {n}
+└── ⏭️ Skipped: {n}
+
+{if rejected > 0}
+Rejected items: _staging/rejected/
+{endif}
+
+{if skipped > 0}
+Skipped items remain in staging.
+Run /review again to continue.
+{endif}
+
+{if accepted > 0}
+Next: /commit to save changes
+{endif}
+```
+
+---
+
+## --accept-all Mode
+
+If `--accept-all` specified:
+
+1. **MUST** confirm with AskUserQuestion:
+   ```
+   questions: [{
+     question: "Accept ALL {N} staged items without individual review?",
+     header: "Confirm",
+     options: [
+       {label: "Yes, accept all", description: "Skip individual review"},
+       {label: "No, review each", description: "Go through items one by one"}
+     ],
+     multiSelect: false
+   }]
+   ```
+
+2. If "No": Fall through to normal interactive review
+3. If "Yes": Process all as Accept, but still show progress
+
+---
+
+## --list Mode
+
+If `--list` specified:
+
+Execute only Step 1, display list, then STOP:
+
+```
 📝 Staged Items
 ━━━━━━━━━━━━━━━
 
-New entities (4):
-├── _staging/new/patterns/food-sovereignty.md
-├── _staging/new/protocols/seed-sharing-circle.md
-├── _staging/new/people/elena-rodriguez.md
-└── _staging/new/organizations/bioregional-food-council.md
+New entities ({n}):
+├── {path}
+└── ...
 
-Updates (3):
-├── _staging/updates/participatory-budgeting.yaml
-├── _staging/updates/sarah-chen.yaml
-└── _staging/updates/community-garden-protocol.yaml
+Updates ({n}):
+├── {path}
+└── ...
 
-Merges (1):
-└── _staging/merges/community-food-systems.yaml
+Merges ({n}):
+└── {path}
 
-Run /review to start reviewing.
+Run /review to start interactive review.
 ```
 
-## Batch Actions
+---
+
+## Error Handling
+
+If any operation fails:
+1. Report error clearly
+2. Ask user: "Skip this item?" / "Retry" / "Abort review"
+3. Handle according to response
+
+---
+
+## Example Flow
 
 ```
-# Approve all new entities (careful!)
-/review --type new --approve-all
+📝 Review Session
+━━━━━━━━━━━━━━━━━
 
-⚠️ About to approve 4 new entities:
-├── patterns/food-sovereignty.md
-├── protocols/seed-sharing-circle.md
-├── people/elena-rodriguez.md
-└── organizations/bioregional-food-council.md
+5 items staged for review:
+├── 3 new entities
+├── 1 update
+└── 1 merge
 
-Are you sure? This cannot be undone. [y/N]
-> y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[1/5] NEW PATTERN: nested-consent-circles.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-✅ Approved 4 new entities
-   Ready for commit: /github commit
-```
+Source: governance-call-2026-02-01.md
+Confidence: 0.85
 
-## After Review
+Preview:
+┌─────────────────────────────────────────────────
+│ name: "Nested Consent Circles"
+│ type: pattern
+│ ...
+└─────────────────────────────────────────────────
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Review Session Complete
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[AskUserQuestion: Accept/Reject/Edit/Skip]
 
-Results:
-├── ✅ Accepted: 6
-├── ❌ Rejected: 1
-└── ⏭️ Skipped: 1
+User selects: "Accept"
 
-Rejected items moved to: _staging/rejected/
-Skipped items remain in: _staging/
+✅ Accepted: nested-consent-circles.md
 
-Ready to commit accepted changes.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[2/5] NEW PERSON: sarah-chen.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Next steps:
-• /github commit - Commit changes
-• /github pr create - Create PR (commons mode)
-• /review - Continue with skipped items
-```
-
-## Rejection Reasons
-
-When rejecting, provide a reason:
-
-```
-Choice: r
-
-Why are you rejecting this?
-> Duplicate of existing entity, but merge confidence was too low
-
-✅ Rejected: protocols/seed-sharing-circle.md
-   Reason logged: "Duplicate of existing entity..."
-   Moved to: _staging/rejected/seed-sharing-circle.md
-```
-
-## Edit Before Accept
-
-```
-Choice: e
-
-Opening editor for: patterns/food-sovereignty.md
-
-[Editor opens with content]
-
-After editing, save and close.
-
-Changes detected:
-+ Added: "See also: [[patterns/agroecology]]"
-+ Modified: Description expanded
-
-Accept with these changes? [Y/n]
-> y
-
-✅ Accepted with edits: patterns/food-sovereignty.md
+[... continues for each item ...]
 ```
