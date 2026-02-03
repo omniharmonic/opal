@@ -24,6 +24,619 @@ Templates are accelerators, not requirements. Start with one and customize, or b
 
 ---
 
+## EXECUTION INSTRUCTIONS
+
+**⚠️ CRITICAL: This wizard MUST use AskUserQuestion for EACH step and WAIT for responses. Every question should have a way to skip or customize. Provide intelligent suggestions based on previous answers.**
+
+When this command is invoked, execute these phases IN ORDER.
+
+### Phase 0: Check Existing Configuration
+
+**Action:** Use Glob to check for existing configuration.
+
+1. Check if `.opal/schema.yaml` or `.opal/config.yaml` exists
+2. If exists and no `--reconfigure` flag:
+   ```
+   ⚠️ OPAL is already configured in this directory.
+
+   Use AskUserQuestion:
+   questions: [{
+     question: "An OPAL configuration already exists. What would you like to do?",
+     header: "Existing Config",
+     options: [
+       {label: "Reconfigure", description: "Modify existing configuration"},
+       {label: "View current", description: "Show current configuration and exit"},
+       {label: "Start fresh", description: "Delete existing and start over"},
+       {label: "Cancel", description: "Exit setup"}
+     ]
+   }]
+   ```
+   Handle response accordingly.
+
+---
+
+### Phase 1: Understanding Your Intent
+
+**Goal:** Understand what the user wants to build so we can provide intelligent suggestions.
+
+#### Step 1.1: Starting Point
+
+**USE AskUserQuestion:**
+```
+questions: [{
+  question: "Welcome to OPAL! How would you like to set up your knowledge base?",
+  header: "Setup Mode",
+  options: [
+    {label: "Guide me (Recommended)", description: "Answer a few questions and I'll suggest a configuration"},
+    {label: "Use a template", description: "Start from a pre-built configuration"},
+    {label: "Import existing files", description: "Analyze your current files and generate a schema"},
+    {label: "Minimal setup", description: "Just the basics, I'll configure as I go"}
+  ]
+}]
+```
+
+**WAIT FOR RESPONSE.**
+
+- If "Guide me" → Continue to Step 1.2
+- If "Use a template" → Jump to Template Flow
+- If "Import existing" → Jump to Import Flow
+- If "Minimal setup" → Jump to Minimal Flow
+
+#### Step 1.2: Primary Use Case
+
+**USE AskUserQuestion:**
+```
+questions: [{
+  question: "What best describes what you'll be organizing?",
+  header: "Use Case",
+  options: [
+    {label: "Personal knowledge", description: "Notes, ideas, things I'm learning"},
+    {label: "Work & projects", description: "Meetings, clients, deliverables"},
+    {label: "Research", description: "Papers, sources, citations"},
+    {label: "Community knowledge", description: "Shared patterns, protocols, resources"}
+  ]
+}]
+```
+
+**WAIT FOR RESPONSE.** Store as `use_case`.
+
+#### Step 1.3: Content Types Probe
+
+Based on `use_case`, ask a targeted follow-up:
+
+**For "Personal knowledge":**
+```
+questions: [{
+  question: "What kinds of things do you capture? Select all that apply.",
+  header: "Content",
+  options: [
+    {label: "Notes & ideas", description: "Quick thoughts, insights, connections"},
+    {label: "Sources", description: "Books, articles, videos I learn from"},
+    {label: "People", description: "People I learn from or want to remember"},
+    {label: "Questions", description: "Things I'm curious about or researching"}
+  ],
+  multiSelect: true
+}]
+```
+
+**For "Work & projects":**
+```
+questions: [{
+  question: "What do you need to track? Select all that apply.",
+  header: "Content",
+  options: [
+    {label: "Projects", description: "Work initiatives with timelines"},
+    {label: "Meetings", description: "Notes from calls and discussions"},
+    {label: "Clients/Contacts", description: "People and organizations you work with"},
+    {label: "Documents", description: "Files, deliverables, references"}
+  ],
+  multiSelect: true
+}]
+```
+
+**For "Research":**
+```
+questions: [{
+  question: "What does your research involve? Select all that apply.",
+  header: "Content",
+  options: [
+    {label: "Papers & articles", description: "Academic or professional literature"},
+    {label: "Authors & researchers", description: "People whose work you follow"},
+    {label: "Concepts & terms", description: "Domain-specific vocabulary"},
+    {label: "Experiments & data", description: "Studies, datasets, findings"}
+  ],
+  multiSelect: true
+}]
+```
+
+**For "Community knowledge":**
+```
+questions: [{
+  question: "What kind of community knowledge? Select all that apply.",
+  header: "Content",
+  options: [
+    {label: "Patterns & practices", description: "Reusable approaches and methods"},
+    {label: "Protocols & processes", description: "Step-by-step procedures"},
+    {label: "People & orgs", description: "Contributors and organizations"},
+    {label: "Events & activities", description: "Gatherings, initiatives, grants"}
+  ],
+  multiSelect: true
+}]
+```
+
+**WAIT FOR RESPONSE.** Store selections as `content_types`.
+
+---
+
+### Phase 2: Resource Types
+
+**Goal:** Define what kinds of things the user will track. Use their Phase 1 answers to provide intelligent suggestions.
+
+#### Step 2.1: Suggest Resource Types
+
+Based on `use_case` and `content_types`, generate suggested resource types.
+
+**Build suggestion list.** Example for "Work & projects" + ["Projects", "Meetings", "Clients"]:
+
+```
+Based on what you've told me, I suggest these resource types:
+
+📁 Suggested Structure
+━━━━━━━━━━━━━━━━━━━━━━
+
+  projects/     → Track work initiatives
+                  Fields: title, client, status, start_date, description
+
+  meetings/     → Capture discussions and decisions
+                  Fields: title, date, attendees, project, notes, action_items
+
+  clients/      → Organizations you work with
+                  Fields: name, industry, contacts, notes
+
+  people/       → Individual contacts
+                  Fields: name, role, organization, email, notes
+```
+
+**USE AskUserQuestion:**
+```
+questions: [{
+  question: "Here's a suggested structure based on your needs. What would you like to do?",
+  header: "Structure",
+  options: [
+    {label: "Looks good!", description: "Accept these resource types"},
+    {label: "Add more types", description: "I need to track additional things"},
+    {label: "Remove some", description: "This is more than I need"},
+    {label: "Start over", description: "Let me describe what I need differently"}
+  ]
+}]
+```
+
+**WAIT FOR RESPONSE.**
+
+- If "Looks good!" → Store types, continue to Step 2.3
+- If "Add more types" → Go to Step 2.2
+- If "Remove some" → Ask which to remove, then continue
+- If "Start over" → Return to Phase 1
+
+#### Step 2.2: Add Custom Types
+
+**USE AskUserQuestion:**
+```
+questions: [{
+  question: "What else do you want to track? Think about the NOUNS in your domain.",
+  header: "Add Types",
+  options: [
+    {label: "Tasks/To-dos", description: "Action items and things to do"},
+    {label: "Resources/Links", description: "URLs, articles, references"},
+    {label: "Events", description: "Meetings, conferences, deadlines"},
+    {label: "Notes/Ideas", description: "Freeform thoughts and insights"}
+  ],
+  multiSelect: true
+}]
+```
+
+Note: User can also select "Other" to type custom types.
+
+**WAIT FOR RESPONSE.** Add selected types to the list.
+
+#### Step 2.3: Configure Each Type (With Smart Defaults)
+
+For each resource type, provide intelligent field suggestions and let user approve/modify.
+
+**For each type, display suggestion and ask:**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Configuring: {type_name}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Directory: {type_name}s/
+
+Suggested fields:
+  • title (required) - The name of this {type}
+  • {field2} - {description}
+  • {field3} - {description}
+  ...
+```
+
+**USE AskUserQuestion:**
+```
+questions: [{
+  question: "How do these fields look for {type_name}?",
+  header: "{Type}",
+  options: [
+    {label: "Perfect", description: "Use these fields as-is"},
+    {label: "Add fields", description: "I need more fields"},
+    {label: "Remove fields", description: "This is too detailed"},
+    {label: "Skip this type", description: "I don't need {type_name} after all"}
+  ]
+}]
+```
+
+**WAIT FOR RESPONSE.** Process each type.
+
+**If "Add fields":**
+```
+questions: [{
+  question: "What additional fields do you need for {type_name}?",
+  header: "Add Fields",
+  options: [
+    {label: "Tags/Categories", description: "Flexible labels for filtering"},
+    {label: "Status", description: "Track state (draft, active, complete)"},
+    {label: "Priority", description: "Importance level"},
+    {label: "Due date", description: "Deadline or target date"}
+  ],
+  multiSelect: true
+}]
+```
+
+---
+
+### Phase 3: Dimensions (Cross-Cutting Categories)
+
+**Goal:** Define ways to categorize across resource types. Suggest based on chosen types.
+
+#### Step 3.1: Suggest Dimensions
+
+Analyze the configured types. If any have status fields or similar, suggest dimensions.
+
+```
+📊 Cross-Type Categories (Dimensions)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Dimensions let you filter across different types.
+For example, "status" could apply to projects, meetings, AND tasks.
+
+Based on your types, I suggest:
+
+  status
+  ├── Applies to: projects, tasks, documents
+  └── Values: draft, active, on_hold, complete, archived
+
+  priority
+  ├── Applies to: projects, tasks
+  └── Values: low, medium, high, urgent
+```
+
+**USE AskUserQuestion:**
+```
+questions: [{
+  question: "Would you like to use these cross-type categories?",
+  header: "Dimensions",
+  options: [
+    {label: "Yes, use both", description: "Add status and priority dimensions"},
+    {label: "Just status", description: "I only need status tracking"},
+    {label: "Just priority", description: "I only need priority levels"},
+    {label: "Neither", description: "I'll categorize differently"},
+    {label: "Skip for now", description: "I can add these later"}
+  ]
+}]
+```
+
+**WAIT FOR RESPONSE.** Store dimension configuration.
+
+---
+
+### Phase 4: Relationships
+
+**Goal:** Define how types connect to each other. Auto-detect from reference fields.
+
+#### Step 4.1: Detect and Suggest Relationships
+
+Analyze types for reference fields (e.g., project → client, meeting → project).
+
+```
+🔗 Relationships Between Types
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+I detected these connections based on your fields:
+
+  project → client
+  "A project belongs to a client"
+
+  meeting → project
+  "A meeting is about a project"
+
+  meeting → person (attendees)
+  "People attend meetings"
+
+  task → project
+  "Tasks are part of projects"
+```
+
+**USE AskUserQuestion:**
+```
+questions: [{
+  question: "These relationships will help you navigate between connected items. Accept them?",
+  header: "Relationships",
+  options: [
+    {label: "Accept all", description: "Use all suggested relationships"},
+    {label: "Review each", description: "Let me approve one by one"},
+    {label: "Skip relationships", description: "I'll manage connections manually"}
+  ]
+}]
+```
+
+**WAIT FOR RESPONSE.**
+
+If "Review each", loop through each relationship with accept/reject.
+
+---
+
+### Phase 5: Content Sources
+
+**Goal:** Configure where content will come from.
+
+#### Step 5.1: Source Categories
+
+**USE AskUserQuestion:**
+```
+questions: [{
+  question: "Where will your content come from? Select all that apply.",
+  header: "Sources",
+  options: [
+    {label: "Meeting recordings", description: "Transcripts from Otter, Fathom, Meetily, etc."},
+    {label: "Chat apps", description: "Links from Telegram, Discord, Slack"},
+    {label: "RSS/Blogs", description: "Articles from feeds you follow"},
+    {label: "Files", description: "Documents from local folders or cloud storage"}
+  ],
+  multiSelect: true
+}]
+```
+
+**WAIT FOR RESPONSE.** Store as `source_categories`.
+
+#### Step 5.2: Configure Selected Sources
+
+For each selected category, offer specific source options.
+
+**If "Meeting recordings" selected:**
+```
+questions: [{
+  question: "Which meeting transcription service do you use?",
+  header: "Meetings",
+  options: [
+    {label: "Meetily", description: "Local transcription app (free)"},
+    {label: "Otter.ai", description: "Cloud transcription service"},
+    {label: "Fathom", description: "Video call transcription"},
+    {label: "None yet", description: "I'll add this later"}
+  ]
+}]
+```
+
+**If "Chat apps" selected:**
+```
+questions: [{
+  question: "Which chat app do you want to capture links from?",
+  header: "Chat Links",
+  options: [
+    {label: "Telegram", description: "Monitor channels for shared links"},
+    {label: "Discord", description: "Capture links from Discord channels"},
+    {label: "Slack", description: "Watch Slack channels for links"},
+    {label: "Skip for now", description: "I'll configure this later"}
+  ]
+}]
+```
+
+For each selection, note if it requires configuration (API keys, etc.) and offer to skip.
+
+**USE AskUserQuestion for each source that needs setup:**
+```
+questions: [{
+  question: "Telegram requires a bot token. Do you have one ready?",
+  header: "Telegram Setup",
+  options: [
+    {label: "Yes, configure now", description: "I have my bot token ready"},
+    {label: "Skip for now", description: "I'll set this up later with /sources add telegram"},
+    {label: "How do I get one?", description: "Show me instructions"}
+  ]
+}]
+```
+
+---
+
+### Phase 6: Review and Create
+
+**Goal:** Show summary and confirm before creating files.
+
+#### Step 6.1: Display Summary
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  📋 Configuration Summary
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Resource Types: {N}
+  ├── projects/ (6 fields)
+  ├── meetings/ (5 fields)
+  ├── clients/ (4 fields)
+  └── people/ (4 fields)
+
+Dimensions: {N}
+  ├── status: draft, active, complete, archived
+  └── priority: low, medium, high, urgent
+
+Relationships: {N}
+  ├── project → client
+  ├── meeting → project
+  └── meeting → person
+
+Sources: {N} configured
+  ├── ✅ Meetily (ready)
+  ├── ⏸️ Telegram (needs setup)
+  └── ✅ RSS feeds (ready)
+
+Will create:
+  .opal/
+  ├── config.yaml
+  ├── schema.yaml
+  ├── sources.yaml
+  └── templates/ (4 templates)
+
+  _inbox/, _staging/, _index/
+  projects/, meetings/, clients/, people/
+```
+
+**USE AskUserQuestion:**
+```
+questions: [{
+  question: "Ready to create your knowledge base?",
+  header: "Confirm",
+  options: [
+    {label: "Create it!", description: "Generate configuration and directories"},
+    {label: "Go back", description: "I want to change something"},
+    {label: "Export only", description: "Show me the YAML files but don't create yet"},
+    {label: "Cancel", description: "Exit without creating anything"}
+  ]
+}]
+```
+
+**WAIT FOR RESPONSE.**
+
+- If "Create it!" → Proceed to creation
+- If "Go back" → Ask what to change, return to appropriate phase
+- If "Export only" → Display YAML content, then ask again
+- If "Cancel" → Exit
+
+#### Step 6.2: Create Configuration
+
+**Action:** Use Write tool to create all configuration files.
+
+1. Create `.opal/config.yaml`
+2. Create `.opal/schema.yaml` with all types, dimensions, relationships
+3. Create `.opal/sources.yaml` with configured sources
+4. Create `.opal/templates/{type}.md` for each type
+5. Create directories: `_inbox/`, `_staging/`, `_index/`, and type directories
+6. Create `_index/entities.json` (empty)
+7. Create `_index/pipeline-state.json` (empty)
+8. Create `_index/sync-state.json` (empty)
+
+**Output:**
+```
+✅ Creating your knowledge base...
+
+  ✓ .opal/config.yaml
+  ✓ .opal/schema.yaml
+  ✓ .opal/sources.yaml
+  ✓ .opal/templates/ (4 files)
+  ✓ _inbox/, _staging/, _index/
+  ✓ projects/, meetings/, clients/, people/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  🎉 Your knowledge base is ready!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Quick Start:
+  /sync      Pull content from configured sources
+  /ingest    Add content manually
+  /process   Analyze and extract entities
+  /review    Review staged changes
+  /status    See current state
+
+Tip: Drop files into _inbox/ and run /process to get started!
+```
+
+---
+
+## Template Flow
+
+If user selected "Use a template" in Phase 1:
+
+**USE AskUserQuestion:**
+```
+questions: [{
+  question: "Which template fits your needs?",
+  header: "Template",
+  options: [
+    {label: "Personal Notes (Zettelkasten)", description: "Notes, concepts, sources, questions"},
+    {label: "Work & Projects", description: "Projects, meetings, clients, documents"},
+    {label: "Research Library", description: "Papers, authors, citations, notes"},
+    {label: "Community Commons", description: "Patterns, protocols, organizations"}
+  ]
+}]
+```
+
+**WAIT FOR RESPONSE.**
+
+Then ask:
+```
+questions: [{
+  question: "Would you like to customize this template or use it as-is?",
+  header: "Customize",
+  options: [
+    {label: "Use as-is", description: "Create with default settings"},
+    {label: "Customize first", description: "Let me adjust types and fields"},
+    {label: "See what's included", description: "Show me the details first"}
+  ]
+}]
+```
+
+- If "Use as-is" → Create from template directly
+- If "Customize" → Load template as starting point, go to Phase 2
+- If "See details" → Display template contents, ask again
+
+---
+
+## Import Flow
+
+If user selected "Import existing files":
+
+1. Ask for path or use current directory
+2. Use Glob to scan for `.md`, `.pdf`, `.txt` files
+3. Analyze frontmatter to detect existing types/fields
+4. Generate suggested schema from detected structure
+5. Present for approval/modification using AskUserQuestion
+
+---
+
+## Minimal Flow
+
+If user selected "Minimal setup":
+
+Create only:
+- `.opal/config.yaml` (basic)
+- `.opal/schema.yaml` with just `notes` type
+- `_inbox/`, `_staging/`, `_index/`, `notes/`
+
+```
+✅ Minimal setup complete!
+
+Created a simple structure with just notes/.
+Add more types anytime with /setup --reconfigure.
+```
+
+---
+
+## Error Handling
+
+If any step fails:
+1. Report the error clearly
+2. Use AskUserQuestion to offer recovery options:
+   - Retry
+   - Skip this step
+   - Abort setup
+
+---
+
 ## Interactive Setup Wizard
 
 ### Step 1: Starting Point

@@ -16,6 +16,199 @@ Pull content from configured sources into the inbox.
 /sync --discover            # Find new content sources
 ```
 
+---
+
+## EXECUTION INSTRUCTIONS
+
+When this command is invoked, execute these steps IN ORDER using the specified tools.
+
+### Step 1: Load Configuration
+
+**Action:** Use Read and Glob tools to load source configuration.
+
+1. Use Glob to find config files:
+   - `.opal/sources.yaml`
+   - `config/integrations.yaml`
+   - `config/sources.yaml`
+
+2. Read the first found config file to get list of enabled sources
+
+3. Read `_index/sync-state.json` if it exists (for cursors/last sync times)
+
+4. If `--status` flag: Display source status and STOP (don't sync)
+
+5. If `--dry-run` flag: Set dry_run mode for reporting only
+
+**Output:**
+```
+📥 Syncing Content Sources
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Found {N} enabled sources:
+├── {source1}
+├── {source2}
+└── {source3}
+```
+
+**If no sources configured:**
+```
+⚠️ No sources configured.
+Run /setup to configure content sources, or /sources add to add one.
+```
+STOP here.
+
+### Step 2: Process Each Source
+
+For each enabled source (or specified source if argument given), execute Steps 2a-2c:
+
+#### Step 2a: Check Source Type and Connect
+
+**For filesystem/meetily (local sources):**
+1. Check if path exists using Bash `test -e <path>`
+2. If meetily, check SQLite database exists
+
+**For API sources (telegram, rss, otter, fathom, etc.):**
+1. Check if credentials are configured in environment or config
+2. Note: Actual API calls would require MCP servers or external tools
+
+**For URL watch sources:**
+1. Prepare list of URLs to check
+
+**Output:**
+```
+[{index}/{total}] {source_name}
+      ├── Checking {source_type}...
+```
+
+#### Step 2b: Fetch New Content
+
+**For filesystem:**
+1. Use Glob to find new files since last sync
+2. Use Bash to copy files to inbox:
+   ```bash
+   cp "{source_path}" "_inbox/{category}/"
+   ```
+
+**For meetily (local SQLite):**
+1. Note: Would query SQLite for meetings since last sync
+2. Create markdown file for each meeting in `_inbox/meetings/`
+
+**For RSS feeds:**
+1. Use WebFetch tool to fetch feed URL
+2. Parse feed items and filter by date
+3. For each new item, fetch full content and save to `_inbox/feeds/`
+
+**For URL watching:**
+1. Use WebFetch tool to check each URL
+2. Compare content hash to detect changes
+3. Save changed content to `_inbox/scraped/`
+
+**For API sources (telegram, otter, etc.):**
+1. Note in output that this requires MCP server or API integration
+2. If MCP available, use appropriate tool
+3. If not, report that source requires configuration
+
+**Output:**
+```
+      ├── Found: {N} new items
+      │   ├── {item1}
+      │   └── {item2}
+```
+
+#### Step 2c: Write to Inbox
+
+**Action:** Use Write tool to create inbox files.
+
+For each fetched item:
+
+1. Generate filename: `{source}-{date}-{slug}.md`
+
+2. Create markdown with frontmatter:
+   ```yaml
+   ---
+   source: {source_name}
+   source_id: {unique_id}
+   synced_at: {timestamp}
+   url: {if applicable}
+   ---
+
+   {content}
+   ```
+
+3. Write to appropriate inbox subdirectory
+
+4. If `--dry-run`: Report what WOULD be written, don't actually write
+
+**Output:**
+```
+      └── ✅ Synced {N} items → _inbox/{category}/
+```
+
+**If dry-run:**
+```
+      └── 📋 Would sync {N} items → _inbox/{category}/
+```
+
+### Step 3: Update Sync State
+
+**Action:** Use Read and Write tools to update state file.
+
+1. Read current `_index/sync-state.json`
+
+2. Update for each synced source:
+   - `last_sync`: Current timestamp
+   - `cursors`: Updated position markers
+   - `items_synced`: Increment count
+   - `errors`: Record any failures
+
+3. Write updated state back
+
+### Step 4: Summary
+
+**Action:** Report sync results.
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Summary:
+• Sources checked: {N}
+• Items synced: {N}
+• Failed: {N} (see _inbox/failed/)
+• Total inbox items: {N}
+
+Next: Run /process to analyze new content
+```
+
+---
+
+## Error Handling
+
+If any source fails:
+
+1. Log the error:
+   ```
+   ⚠️ Error syncing {source}
+      {error description}
+   ```
+
+2. Continue to next source (don't abort entire sync)
+
+3. Record failure in sync-state.json for later retry
+
+4. Use AskUserQuestion if critical source fails:
+   ```
+   questions: [{
+     question: "{source} failed. What would you like to do?",
+     header: "Error",
+     options: [
+       {label: "Continue", description: "Skip this source, continue with others"},
+       {label: "Retry", description: "Try this source again"},
+       {label: "Abort", description: "Stop syncing"}
+     ]
+   }]
+   ```
+
+---
+
 ## Philosophy
 
 **Pull, don't push.** OPAL proactively pulls content from your subscribed sources. Configure once, sync regularly.
