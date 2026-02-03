@@ -13,180 +13,438 @@ Pull content from configured sources into the inbox.
 /sync --since <date>        # Override time range (ISO date)
 /sync --force               # Ignore cursor, refetch all
 /sync --retry-failed        # Retry previously failed items
+/sync --discover            # Find new content sources
 ```
+
+## Philosophy
+
+**Pull, don't push.** OPAL proactively pulls content from your subscribed sources. Configure once, sync regularly.
+
+**Intelligent fetching.** For URLs, OPAL acts as an agent: extracting content, handling pagination, and following relevant links.
+
+**Incremental by default.** Only fetches content since last sync, tracked per-source.
+
+---
 
 ## Available Sources
 
-| Source | Type | Description |
-|--------|------|-------------|
-| `fathom` | Transcript | Video call transcripts from Fathom |
-| `otter` | Transcript | Meeting transcripts from Otter.ai |
-| `read` | Transcript | Meeting transcripts from Read.ai |
-| `telegram` | Links | URLs shared in monitored channels |
-| `rss` | Feed | Articles from RSS/Atom feeds |
-| `youtube` | Transcript | Video transcripts from YouTube |
-| `podcast` | Transcript | Episode transcripts from podcasts |
+### Transcripts
+| Source | Description | Auth |
+|--------|-------------|------|
+| `meetily` | Local SQLite database | None |
+| `fathom` | Fathom.video transcripts | API Key |
+| `otter` | Otter.ai transcripts | API Key |
+| `read_ai` | Read.ai transcripts | API Key |
+| `fireflies` | Fireflies.ai transcripts | API Key |
+
+### Links & Articles
+| Source | Description | Auth |
+|--------|-------------|------|
+| `telegram` | Links from monitored channels | Bot Token |
+| `discord` | Links from monitored channels | Bot Token |
+| `slack` | Links from monitored channels | App Token |
+| `rss` | RSS/Atom feed articles | None |
+
+### Media
+| Source | Description | Auth |
+|--------|-------------|------|
+| `youtube` | Video transcripts/captions | API Key |
+| `podcast` | Podcast episode transcription | None |
+| `vimeo` | Video transcripts | API Key |
+
+### Web
+| Source | Description | Auth |
+|--------|-------------|------|
+| `urls` | Watch specific URLs for changes | None |
+| `sitemap` | Monitor sitemaps for new pages | None |
+
+### Documents
+| Source | Description | Auth |
+|--------|-------------|------|
+| `filesystem` | Watch local directories | None |
+| `gdrive` | Google Drive folders | OAuth |
+| `dropbox` | Dropbox folders | OAuth |
+
+---
 
 ## Example: Sync All Sources
 
 ```
 /sync
 
-Syncing Content Sources
+📥 Syncing Content Sources
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[1/4] Fathom
-      ├── Checking for new transcripts...
+[1/5] meetily
+      ├── Checking local database...
       ├── Last sync: 2026-02-01T10:00:00Z
-      ├── Found: 3 new transcripts
-      │   ├── team-standup-2026-02-02.md (12 min)
-      │   ├── product-review-2026-02-02.md (45 min)
-      │   └── customer-call-2026-02-01.md (28 min)
-      └── ✅ Synced 3 items → _inbox/transcripts/fathom/
+      ├── Found: 3 new meetings
+      │   ├── 2026-02-02_team-planning.md (45 min)
+      │   ├── 2026-02-02_client-call.md (28 min)
+      │   └── 2026-02-01_workshop.md (90 min)
+      └── ✅ Synced 3 items → _inbox/meetings/
 
-[2/4] Otter
-      ├── Checking for new transcripts...
-      ├── Last sync: 2026-02-01T10:00:00Z
-      └── ✅ No new items
-
-[3/4] Telegram
-      ├── Checking monitored channels...
-      ├── Channels: #opencivics-links (2 new), #resources (5 new)
+[2/5] telegram
+      ├── Checking 3 monitored channels...
+      ├── #research-links: 5 new messages with links
+      ├── #news: 2 new messages with links
       ├── Fetching URL content for 7 links...
-      │   ├── ✅ https://example.com/governance-article
-      │   ├── ✅ https://research.org/paper.pdf
-      │   ├── ✅ https://event.io/conference-2026
-      │   ├── ✅ https://toolkit.org/guide
-      │   ├── ✅ https://coalition.net/about
-      │   ├── ✅ https://grants.gov/opportunity
+      │   ├── ✅ https://example.com/article (fetched, 2.3kb)
+      │   ├── ✅ https://research.org/paper.pdf (fetched, 156kb)
+      │   ├── ✅ https://grants.gov/opportunity (fetched, 4.1kb)
+      │   ├── ✅ https://event.io/conference (fetched, 3.2kb)
+      │   ├── ✅ https://blog.example.com/post (fetched, 5.4kb)
+      │   ├── ⚠️ https://paywalled.com/article (paywall detected)
       │   └── ❌ https://broken.link (404 Not Found)
-      └── ✅ Synced 6 items → _inbox/links/telegram/
+      └── ✅ Synced 5 items → _inbox/links/telegram/
 
-[4/4] RSS
-      ├── Checking 3 feeds...
-      ├── Found: 2 new articles
-      └── ✅ Synced 2 items → _inbox/links/rss/
+[3/5] rss
+      ├── Checking 4 feeds...
+      ├── Example Blog: 2 new articles
+      ├── Tech News: 1 new article
+      ├── Fetching full content...
+      └── ✅ Synced 3 items → _inbox/feeds/
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[4/5] urls
+      ├── Checking 8 watched URLs...
+      ├── grants.gov/opportunities: 3 new listings found
+      ├── events.example.com: 1 new event
+      ├── Following links on grants.gov...
+      │   └── Fetched 3 grant detail pages
+      └── ✅ Synced 4 items → _inbox/scraped/
+
+[5/5] youtube
+      ├── Checking subscribed channels...
+      ├── Found: 2 new videos with captions
+      ├── Downloading transcripts...
+      └── ✅ Synced 2 items → _inbox/youtube/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 Summary:
-• Sources checked: 4
-• Items synced: 11
-• Failed: 1 (see _inbox/failed/)
-• Total inbox items: 24
+• Sources checked: 5
+• Items synced: 17
+• Failed: 2 (see _inbox/failed/)
+• Total inbox items: 42
 
 Next: Run /process to analyze new content
 ```
 
-## Example: Sync Status
+---
+
+## Sync Status
 
 ```
 /sync --status
 
-Sync Status
+📊 Source Sync Status
+━━━━━━━━━━━━━━━━━━━━━
 
 ┌─────────────┬─────────┬─────────────────────┬────────┬────────┐
-│ Source      │ Enabled │ Last Sync           │ Synced │ Errors │
+│ Source      │ Status  │ Last Sync           │ Total  │ Errors │
 ├─────────────┼─────────┼─────────────────────┼────────┼────────┤
-│ fathom      │ ✅      │ 2 hours ago         │ 145    │ 0      │
-│ otter       │ ✅      │ 6 hours ago         │ 89     │ 0      │
-│ read        │ ❌      │ never               │ 0      │ -      │
-│ telegram    │ ✅      │ 30 minutes ago      │ 312    │ 3      │
-│ rss         │ ✅      │ 2 hours ago         │ 67     │ 0      │
-│ youtube     │ ❌      │ never               │ 0      │ -      │
-│ podcast     │ ❌      │ never               │ 0      │ -      │
+│ meetily     │ ✅ OK   │ 2 hours ago         │ 145    │ 0      │
+│ telegram    │ ✅ OK   │ 30 min ago          │ 512    │ 8      │
+│ rss         │ ✅ OK   │ 2 hours ago         │ 234    │ 0      │
+│ urls        │ ⚠️ Warn │ 18 hours ago        │ 67     │ 3      │
+│ youtube     │ ✅ OK   │ 1 day ago           │ 23     │ 0      │
+│ fathom      │ ❌ Off  │ -                   │ -      │ -      │
+│ podcast     │ ❌ Off  │ -                   │ -      │ -      │
 └─────────────┴─────────┴─────────────────────┴────────┴────────┘
 
-Configured channels (telegram):
-• #opencivics-links - 156 items synced
-• #resources - 98 items synced
-• #activities - 58 items synced
+Telegram Channels:
+├── #research-links (312 items)
+├── #news (156 items)
+└── #activities (44 items)
 
-Configured feeds (rss):
-• Open Civics Blog - 34 items synced
-• Governance Weekly - 33 items synced
+RSS Feeds:
+├── Example Blog (89 items)
+├── Tech News (78 items)
+├── Research Weekly (45 items)
+└── Grants Digest (22 items)
 
-Next sync scheduled: telegram in 12 minutes
+Watched URLs:
+├── grants.gov/opportunities (34 items, 3 errors)
+├── events.example.com (18 items)
+└── jobs.example.org (15 items)
+
+Next Scheduled:
+├── telegram: in 12 minutes
+├── rss: in 1h 30m
+└── urls: tomorrow 6:00 AM
 ```
 
-## Example: Sync Specific Source
+---
+
+## Sync Specific Source
 
 ```
 /sync telegram
 
-Syncing: Telegram
+📥 Syncing: Telegram
+━━━━━━━━━━━━━━━━━━━━
 
-Checking monitored channels...
-├── #opencivics-links
-│   ├── Last message ID: 98765
-│   ├── Found 3 new messages with links
-│   └── Fetching content...
-│
-├── #resources
-│   ├── Last message ID: 87654
-│   ├── Found 1 new message with links
-│   └── Fetching content...
-│
-└── #activities
-    ├── Last message ID: 76543
-    └── No new messages
+Checking 3 monitored channels...
 
-Fetched URLs:
-├── ✅ https://participatory-budgeting.org/guide
-│   └── Saved: _inbox/links/telegram/msg-98766.md
-├── ✅ https://events.opencivics.co/summit-2026
-│   └── Saved: _inbox/links/telegram/msg-98767.md
-├── ✅ https://grants.foundation/civic-tech
-│   └── Saved: _inbox/links/telegram/msg-98768.md
-└── ✅ https://toolkit.commons.co/facilitation
-    └── Saved: _inbox/links/telegram/msg-87655.md
+#research-links
+├── Last message ID: 98765
+├── Found 5 new messages with links
+└── Processing links...
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#news
+├── Last message ID: 87654
+├── Found 2 new messages with links
+└── Processing links...
+
+#activities
+├── Last message ID: 76543
+└── No new messages
+
+Fetching URL Content:
+━━━━━━━━━━━━━━━━━━━━━
+
+[1/7] https://arxiv.org/abs/2401.12345
+      ├── Type: PDF
+      ├── Title: "Advances in Collective Intelligence"
+      ├── Extracted: 24 pages, 8,432 words
+      └── ✅ Saved: _inbox/links/telegram/arxiv-2401-12345.md
+
+[2/7] https://grants.gov/opportunity/12345
+      ├── Type: HTML
+      ├── Title: "Community Development Grant"
+      ├── Extracted: 1,234 words
+      ├── Detected: grant opportunity (deadline: 2026-03-15)
+      └── ✅ Saved: _inbox/links/telegram/grants-12345.md
+
+[3/7] https://medium.com/@author/article
+      ├── Type: Article
+      ├── Title: "Building Resilient Communities"
+      ├── Extracted: 2,456 words
+      └── ✅ Saved: _inbox/links/telegram/medium-article.md
+
+[4/7] https://youtube.com/watch?v=xxxxx
+      ├── Type: Video
+      ├── Title: "Governance Workshop Recording"
+      ├── Fetching captions...
+      ├── Extracted: 45 min transcript
+      └── ✅ Saved: _inbox/links/telegram/youtube-xxxxx.md
+
+[5/7] https://paywalled-site.com/article
+      ├── Type: Paywall detected
+      └── ⚠️ Skipped: Content behind paywall
+
+[6/7] https://twitter.com/status/12345
+      └── ⏭️ Skipped: Excluded domain (twitter.com)
+
+[7/7] https://broken-link.example.com
+      └── ❌ Failed: 404 Not Found
+
+━━━━━━━━━━━━━━━━━━━━
 Summary:
-• Channels checked: 3
-• New links found: 4
+• Messages checked: 7
+• Links processed: 7
 • Successfully fetched: 4
-• Failed: 0
+• Skipped: 2
+• Failed: 1
 
-Cursor updated: telegram → msg-98768
+Cursor updated: telegram/research-links → 98770
 ```
 
-## Example: Dry Run
+---
+
+## Intelligent Content Fetching
+
+When syncing URLs, OPAL acts as an intelligent agent:
+
+### Content Extraction
+- **Readability extraction**: Removes navigation, ads, and boilerplate
+- **PDF handling**: Extracts text from PDF documents
+- **Metadata extraction**: Title, author, date, description
+- **Image extraction**: Optional, for visual content
+
+### Link Following
+```
+/sync urls --follow-links
+
+Syncing: grants.gov/opportunities
+
+Checking main page...
+├── Found 12 grant listings
+├── Following links to detail pages...
+│   ├── /opportunity/12345 → fetched
+│   ├── /opportunity/12346 → fetched
+│   ├── /opportunity/12347 → fetched
+│   └── ... (9 more)
+└── ✅ Synced 12 grant opportunities
+
+Following was enabled because:
+  • Page contains list of items
+  • Link selector: ".grant-listing a"
+  • Max depth: 1
+```
+
+### Pagination Handling
+```
+/sync rss
+
+Checking: Research Blog (paginated)
+
+├── Page 1: 10 articles
+├── Page 2: 10 articles
+├── Page 3: 5 articles
+└── Total: 25 new articles (stopped at max)
+```
+
+---
+
+## Dry Run
+
+Preview what would be fetched:
 
 ```
 /sync --dry-run
 
-Sync Preview (Dry Run)
+📥 Sync Preview (Dry Run)
+━━━━━━━━━━━━━━━━━━━━━━━━
 
-Would sync from 4 sources:
+Would sync from 5 sources:
 
-[1] Fathom
-    ├── Would check transcripts since: 2026-02-01T10:00:00Z
-    ├── Estimated new items: 2-5
-    └── Destination: _inbox/transcripts/fathom/
+[1] meetily
+    ├── Would check database since: 2026-02-01T10:00:00Z
+    ├── Estimated new items: 2-4
+    └── Destination: _inbox/meetings/
 
-[2] Otter
-    ├── Would check transcripts since: 2026-02-01T08:00:00Z
-    ├── Estimated new items: 0-2
-    └── Destination: _inbox/transcripts/otter/
-
-[3] Telegram
+[2] telegram
     ├── Would check 3 channels
-    ├── Estimated new links: 5-10
+    ├── Estimated new links: 5-15
     ├── Would fetch URL content for each
     └── Destination: _inbox/links/telegram/
 
-[4] RSS
-    ├── Would check 3 feeds
-    ├── Estimated new articles: 1-3
-    └── Destination: _inbox/links/rss/
+[3] rss
+    ├── Would check 4 feeds
+    ├── Estimated new articles: 3-8
+    └── Destination: _inbox/feeds/
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Estimated total: 8-20 new items
+[4] urls
+    ├── Would check 8 watched URLs
+    ├── Would follow links on 3 URLs
+    └── Destination: _inbox/scraped/
+
+[5] youtube
+    ├── Would check 2 channels
+    ├── Estimated new videos: 0-2
+    └── Destination: _inbox/youtube/
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+Estimated total: 15-35 new items
+
 Run without --dry-run to proceed.
 ```
 
+---
+
+## Retry Failed Items
+
+```
+/sync --retry-failed
+
+📥 Retrying Failed Items
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+Found 5 failed items from previous syncs:
+
+[1/5] telegram/msg-12345
+      ├── URL: https://example.com/article
+      ├── Original error: Connection timeout
+      ├── Retrying...
+      └── ✅ Success → _inbox/links/telegram/
+
+[2/5] telegram/msg-12346
+      ├── URL: https://broken.site/page
+      ├── Original error: 404 Not Found
+      ├── Retrying...
+      └── ❌ Still failing (404)
+
+[3/5] rss/article-xyz
+      ├── URL: https://blog.example.com/post
+      ├── Original error: SSL certificate error
+      ├── Retrying with fallback...
+      └── ✅ Success → _inbox/feeds/
+
+[4/5] urls/grants-page
+      ├── URL: https://grants.gov/opportunity/99999
+      ├── Original error: Rate limited
+      ├── Waiting 5s before retry...
+      └── ✅ Success → _inbox/scraped/
+
+[5/5] youtube/video-abc
+      ├── URL: https://youtube.com/watch?v=abc
+      ├── Original error: No captions available
+      ├── Attempting Whisper transcription...
+      └── ✅ Success → _inbox/youtube/
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+Summary:
+• Retried: 5
+• Recovered: 4
+• Still failing: 1
+
+Permanently failed items moved to: _inbox/failed/
+```
+
+---
+
+## Source Discovery
+
+Find new sources based on your content:
+
+```
+/sync --discover
+
+🔍 Source Discovery
+━━━━━━━━━━━━━━━━━━━
+
+Analyzing your existing content and links...
+
+Frequently Referenced (not subscribed):
+├── arxiv.org (47 references)
+│   └── Suggestion: Subscribe to RSS for your research topics
+├── grants.gov (23 references)
+│   └── Suggestion: Add URL watch for /opportunities
+├── eventbrite.com (18 references)
+│   └── Suggestion: Add API integration for events
+
+RSS Feeds Found in Links:
+├── https://blog.example.com/feed
+│   └── Referenced 12 times, not subscribed
+├── https://newsletter.co/rss
+│   └── Referenced 8 times, not subscribed
+
+YouTube Channels Referenced:
+├── @CivicTechTalks
+│   └── 15 video links found
+
+Add discovered sources? [y/n/select]
+> select
+
+Select sources to add:
+  [x] arxiv.org RSS
+  [x] grants.gov URL watch
+  [ ] eventbrite.com API
+  [x] blog.example.com RSS
+  [ ] newsletter.co RSS
+  [ ] @CivicTechTalks YouTube
+
+Adding 3 sources...
+✅ Added to configuration
+
+Run /sync to fetch from new sources.
+```
+
+---
+
 ## Configuration
 
-Sources are configured in `config/integrations.yaml`:
+Sources are configured in `.opal/sources.yaml`:
 
 ```yaml
 sources:
@@ -194,20 +452,41 @@ sources:
     enabled: true
     bot_token_env: TELEGRAM_BOT_TOKEN
     sync:
-      schedule: "*/30 * * * *"    # Every 30 minutes
+      schedule: "*/30 * * * *"
     channels:
       - id: -1001234567890
-        name: opencivics-links
-        monitor_type: links
-      - id: -1009876543210
-        name: resources
+        name: research-links
         monitor_type: links
     link_handling:
       auto_fetch: true
-      fetch_timeout: 30
+      follow_links: false
+      max_content_size_mb: 10
     filters:
       exclude_domains: [twitter.com, x.com]
+
+  rss:
+    enabled: true
+    sync:
+      schedule: "0 */2 * * *"
+    feeds:
+      - url: https://blog.example.com/feed
+        name: Example Blog
+    filters:
+      max_age_days: 14
+
+  urls:
+    enabled: true
+    sync:
+      schedule: "0 6 * * *"
+    watch:
+      - url: https://grants.gov/opportunities
+        follow_links: true
+        link_selector: ".grant-listing a"
 ```
+
+See `.claude/SOURCES.md` for complete configuration reference.
+
+---
 
 ## State Tracking
 
@@ -219,19 +498,28 @@ Sync state is stored in `_index/sync-state.json`:
     "telegram": {
       "enabled": true,
       "last_sync": "2026-02-02T15:00:00Z",
-      "cursor": {
-        "per_channel": {
-          "opencivics-links": 98768,
-          "resources": 87655
-        }
+      "cursors": {
+        "research-links": 98770,
+        "news": 87656
       },
-      "items_synced": 316
+      "items_synced": 512,
+      "errors": 8
+    },
+    "rss": {
+      "enabled": true,
+      "last_sync": "2026-02-02T13:00:00Z",
+      "cursors": {
+        "example-blog": "2026-02-01T12:00:00Z"
+      },
+      "items_synced": 234
     }
   }
 }
 ```
 
-## Inbox Item Format
+---
+
+## Output Format
 
 Synced items include standardized metadata:
 
@@ -239,70 +527,39 @@ Synced items include standardized metadata:
 ---
 source: telegram
 source_id: msg-98766
-channel: opencivics-links
-sender: @civic_enthusiast
-sent_at: 2026-02-02T14:30:00Z
+channel: research-links
 synced_at: 2026-02-02T15:00:00Z
-url: https://participatory-budgeting.org/guide
-url_title: "Complete Guide to Participatory Budgeting"
-url_domain: participatory-budgeting.org
-fingerprint: sha256:abc123...
+url: https://example.com/article
+url_title: "Example Article Title"
+url_author: "Author Name"
+url_date: 2026-02-01
+content_type: article
+word_count: 2456
 ---
 
-# Complete Guide to Participatory Budgeting
+# Example Article Title
 
-## Telegram Context
+By Author Name | Published: 2026-02-01
 
-Shared by @civic_enthusiast in #opencivics-links:
-> "Great resource for anyone implementing PB in their community!"
+## Source Context
+
+Shared by @username in #research-links:
+> "Great article on community governance!"
+
+---
 
 ## Content
 
-[Fetched and converted content...]
+[Extracted article content...]
 ```
 
-## Error Handling
-
-Failed items are logged and can be retried:
-
-```
-/sync --retry-failed
-
-Retrying 3 failed items...
-
-[1/3] telegram/msg-12345
-      ├── Original error: 404 Not Found
-      ├── URL: https://example.com/moved
-      └── ❌ Still failing (404)
-
-[2/3] fathom/call-xyz789
-      ├── Original error: Rate limit exceeded
-      ├── Retrying...
-      └── ✅ Success → _inbox/transcripts/fathom/
-
-[3/3] rss/article-abc
-      ├── Original error: Connection timeout
-      ├── Retrying...
-      └── ✅ Success → _inbox/links/rss/
-
-Summary: 2 recovered, 1 still failing
-```
-
-## Relationship to Other Commands
-
-```
-/sync      → Pulls content from sources → _inbox/
-/ingest    → Manually adds items to → _inbox/
-/process   → Analyzes _inbox/ → _staging/
-/review    → Approves _staging/ items
-```
-
-Use `/sync` for automated source pulling.
-Use `/ingest` for manual one-off additions.
+---
 
 ## Related Commands
 
-- `/process` - Process inbox items through pipeline
-- `/ingest` - Manual content ingestion
+- `/sources` - Manage source subscriptions
+- `/sources add` - Add new sources
+- `/sources test` - Test source connectivity
+- `/process` - Process inbox items
 - `/status inbox` - View inbox contents
-- `/watch sync` - Continuous sync monitoring
+- `/ingest` - Manual content ingestion
