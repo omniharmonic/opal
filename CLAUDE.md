@@ -160,6 +160,35 @@ OPAL uses Claude for domain-aware entity extraction:
 3. **Semantic understanding**: Identifies concepts relevant to your domain
 4. **Relationship detection**: Identifies how entities relate to each other
 
+### Schema-Aware Link Processing
+
+When processing links from any source (Telegram, RSS, scraped URLs), OPAL passes your schema to Claude:
+
+```
+Given this content and the following schema:
+[Your .opal/schema.yaml - resource types, fields, dimensions]
+
+And these URL hints:
+- lu.ma/* → likely "event" type
+- arxiv.org/* → likely "paper" type
+- grants.gov/* → likely "grant" type
+
+And these existing entities:
+[Relevant entities from _index/entities.json]
+
+Determine:
+1. What resource type does this content match?
+2. Extract fields defined for that type
+3. Identify relationships to existing entities
+4. Suggest new entities mentioned in content
+```
+
+This ensures that:
+- Luma events are classified as your "event" or "gathering" type
+- Grant pages extract deadline, amount, eligibility fields
+- Research papers extract authors, abstract, citations
+- People mentioned are linked to existing person entities
+
 ---
 
 ## Deduplication System
@@ -188,11 +217,32 @@ OPAL supports multiple content sources:
 | Fathom | Video call transcripts |
 | Otter.ai | Meeting transcripts |
 | Read.ai | Meeting transcripts |
+| Luma | Events from lu.ma calendars |
+| Eventbrite | Events and gatherings |
 | Telegram | Links from channels |
 | RSS | Articles and blogs |
+| YouTube | Video transcripts |
+| Notion | Database exports and sync |
 | Filesystem | Watch folders for files |
 
 Configure in `/setup` or edit `config/integrations.yaml`.
+
+### Notion Import
+
+OPAL can bootstrap from an existing Notion workspace:
+
+```
+/setup --import-notion ~/Downloads/Notion-Export/
+```
+
+This analyzes your Notion export to:
+- Detect databases and convert to resource types
+- Extract properties as fields and dimensions
+- Convert relations to OPAL relationships
+- Transform Notion links to wiki-links
+- Copy content to appropriate directories
+
+See `/setup --import-notion --help` for options.
 
 ---
 

@@ -657,6 +657,255 @@ Next steps:
 
 ---
 
+## Notion Import
+
+Import an existing Notion workspace export to bootstrap your OPAL schema.
+
+### Step 1: Export from Notion
+
+1. Open Notion → Settings → Export
+2. Choose **Markdown & CSV** format
+3. Select **Include subpages**
+4. Download and unzip the export
+
+### Step 2: Import to OPAL
+
+```
+/setup --import-notion ~/Downloads/Notion-Export/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Notion Import Wizard
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Analyzing Notion export at: ~/Downloads/Notion-Export/
+
+Found:
+  • 342 markdown files
+  • 15 directories (potential databases)
+  • 89 CSV files (database exports)
+  • 156 embedded images
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Detected Notion Structure
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Notion Databases Detected:
+
+  [1] Projects (45 pages)
+      │ CSV: Projects abc123.csv
+      ├── Properties: Name, Status, Client, Due Date, Priority
+      ├── Status values: Planning, Active, On Hold, Complete
+      └── Suggested OPAL type: project
+
+  [2] People (78 pages)
+      │ CSV: People def456.csv
+      ├── Properties: Name, Email, Company, Role, Notes
+      └── Suggested OPAL type: person
+
+  [3] Meeting Notes (123 pages)
+      │ CSV: Meeting Notes ghi789.csv
+      ├── Properties: Title, Date, Attendees, Project, Action Items
+      ├── Attendees → links to People database
+      ├── Project → links to Projects database
+      └── Suggested OPAL type: meeting
+
+  [4] Resources (56 pages)
+      │ CSV: Resources jkl012.csv
+      ├── Properties: Title, URL, Type, Tags, Notes
+      ├── Type values: Article, Video, Book, Tool
+      └── Suggested OPAL type: resource
+
+  [5] Journal (40 pages)
+      │ No CSV (inline database or pages)
+      ├── Detected fields: date (from filename), content
+      └── Suggested OPAL type: journal_entry
+
+Standalone Pages: 23 (will become notes)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Proposed Schema
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Based on your Notion structure, I suggest:
+
+Resource Types:
+  ┌─────────────┬────────────────┬───────┬─────────────────────────────┐
+  │ Type        │ From Notion    │ Count │ Fields                      │
+  ├─────────────┼────────────────┼───────┼─────────────────────────────┤
+  │ project     │ Projects       │ 45    │ title, status, client, due  │
+  │ person      │ People         │ 78    │ name, email, company, role  │
+  │ meeting     │ Meeting Notes  │ 123   │ title, date, attendees      │
+  │ resource    │ Resources      │ 56    │ title, url, type, tags      │
+  │ journal     │ Journal        │ 40    │ date, content               │
+  │ note        │ (standalone)   │ 23    │ title, content, tags        │
+  └─────────────┴────────────────┴───────┴─────────────────────────────┘
+
+Dimensions:
+  • status: planning, active, on_hold, complete (from Projects)
+  • priority: low, medium, high, urgent (from Projects)
+  • resource_type: article, video, book, tool (from Resources)
+
+Relationships:
+  • meeting → project (123 links detected)
+  • meeting → person (attendees, 456 links)
+  • project → person (client contacts, 89 links)
+  • resource → project (34 links)
+
+Accept this schema? [Y/n/customize]
+> y
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Import Options
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+How should I handle the Notion content?
+
+  [1] Copy files (recommended)
+      Copy markdown files to OPAL directories
+      ✓ Preserves original Notion export
+      ✓ Files organized by detected type
+
+  [2] Move files
+      Move files from Notion export to OPAL
+      ⚠️ Modifies original export
+
+  [3] Link only (schema only)
+      Just create schema from Notion structure
+      Content stays in original location
+
+Choice: 1
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Processing Notion Export
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Converting Notion pages...
+
+[1/5] Projects (45 pages)
+      ├── Converting CSV properties to YAML frontmatter
+      ├── Fixing Notion-style links → OPAL wiki-links
+      ├── Cleaning up Notion IDs from filenames
+      └── ✅ Copied to projects/
+
+[2/5] People (78 pages)
+      ├── Converting properties to frontmatter
+      ├── Extracting profile info from page content
+      └── ✅ Copied to people/
+
+[3/5] Meeting Notes (123 pages)
+      ├── Converting date formats
+      ├── Converting @mentions to [[person]] links
+      ├── Preserving action item checkboxes
+      └── ✅ Copied to meetings/
+
+[4/5] Resources (56 pages)
+      ├── Validating URLs
+      ├── Adding fetched metadata where missing
+      └── ✅ Copied to resources/
+
+[5/5] Journal + Standalone (63 pages)
+      ├── Parsing dates from filenames
+      ├── journal/ → journal entries (40)
+      ├── Other → notes (23)
+      └── ✅ Copied to journal/ and notes/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Link Conversion
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Converting Notion links to OPAL format...
+
+Notion format:  [Project Name](Projects%20abc123/Project%20Name%20def456.md)
+OPAL format:    [[projects/project-name]]
+
+Converted: 892 internal links
+Preserved: 156 external URLs
+Broken links: 3 (logged to _import/broken-links.log)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✅ Notion Import Complete!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Created:
+  .opal/
+  ├── config.yaml         # Configuration
+  ├── schema.yaml         # Schema from Notion structure
+  ├── sources.yaml        # Sources (Notion sync enabled)
+  └── templates/          # Templates for each type
+
+Imported:
+  ├── projects/           # 45 files
+  ├── people/             # 78 files
+  ├── meetings/           # 123 files
+  ├── resources/          # 56 files
+  ├── journal/            # 40 files
+  └── notes/              # 23 files
+
+Total: 365 files imported
+
+Import log: _import/notion-import.log
+Broken links: _import/broken-links.log
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Next Steps:
+
+  1. REVIEW the imported content
+     ls projects/ | head -10
+
+  2. BUILD the search index
+     /process --reindex
+
+  3. SET UP ongoing Notion sync (optional)
+     /sources edit notion
+     # Configure to sync changes from Notion
+
+  4. ADD other content sources
+     /sources add meetily
+     /sources add telegram
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Notion Import Options
+
+```
+/setup --import-notion <path> [options]
+
+Options:
+  --schema-only       Only create schema, don't copy files
+  --no-convert        Don't convert Notion links to wiki-links
+  --preserve-ids      Keep Notion IDs in filenames
+  --dry-run           Preview import without changes
+  --merge             Merge with existing OPAL content
+```
+
+### Handling Notion-Specific Features
+
+**Databases → Resource Types**
+- Notion databases become OPAL resource types
+- CSV exports provide property schemas
+- Relations become OPAL relationships
+
+**Properties → Fields**
+- Text, Number, Date → Direct mapping
+- Select, Multi-select → Dimensions or tags
+- Person → Reference to people type
+- Relation → Reference to linked type
+- Formula, Rollup → Computed (not imported)
+
+**Links**
+- `[Page](Page%20abc123.md)` → `[[type/page-name]]`
+- `@mentions` → `[[people/person-name]]`
+- External URLs → Preserved as-is
+
+**Embedded Content**
+- Images → Copied to `_assets/`
+- Files → Copied to `_attachments/`
+- Embeds (videos, etc.) → Converted to links
+
+---
+
 ## Reconfigure Existing Setup
 
 ```

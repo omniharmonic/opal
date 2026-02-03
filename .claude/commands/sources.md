@@ -225,6 +225,105 @@ Schedule: Every 30 minutes
 Output: _inbox/links/telegram/
 ```
 
+### Add Luma Events
+
+```
+/sources add luma
+
+📅 Add Luma Events
+━━━━━━━━━━━━━━━━━━
+
+Luma (lu.ma) can sync events from calendars you follow or host.
+
+1. API key (set LUMA_API_KEY env var)
+   Status: ✅ Configured
+   Get yours at: https://lu.ma/settings/api
+
+How do you want to find events?
+
+  [1] Monitor a calendar
+  [2] Monitor events by a host
+  [3] Search for events
+
+Choice: 1
+
+Enter calendar URL or ID (e.g., lu.ma/calendar/cal-xxxxx):
+> https://lu.ma/calendar/cal-abc123
+
+Checking access... ✅ Calendar found
+
+Calendar Info:
+  Name: Bay Area Civic Tech
+  Events: 24 upcoming
+  Managed by: civic-tech-org
+
+Configuration:
+  • Friendly name? [Bay Area Civic Tech]
+  • What resource type should events become? [event]
+      (Based on your schema: event, gathering, activity)
+  • Extract hosts as people? [Y/n]
+  • Extract organizations? [Y/n]
+  • Apply tags? [luma, civic-tech]
+
+✅ Luma calendar added!
+
+Monitoring: Bay Area Civic Tech
+Schedule: Every 6 hours
+Output: _inbox/events/
+
+Schema routing:
+  Events → event (your schema type)
+  Hosts → people/ (extracted as references)
+  Orgs → organizations/ (extracted as references)
+```
+
+### Add Notion Sync
+
+```
+/sources add notion
+
+📝 Add Notion Sync
+━━━━━━━━━━━━━━━━━━
+
+Sync databases from your Notion workspace.
+
+1. Integration token (set NOTION_TOKEN env var)
+   Status: ✅ Configured
+
+2. Select databases to sync
+
+Fetching your Notion databases...
+
+Available Databases:
+  [1] Projects (45 pages)
+  [2] People (78 pages)
+  [3] Meeting Notes (123 pages)
+  [4] Resources (56 pages)
+
+Select databases (space to toggle, Enter when done):
+> [x] Projects
+> [x] Meeting Notes
+> [ ] People
+> [ ] Resources
+
+Mapping to OPAL types:
+  Projects → project (matches your schema)
+  Meeting Notes → meeting (matches your schema)
+
+Sync options:
+  • Sync frequency? [every 2 hours]
+  • Sync direction? [Notion → OPAL only]
+  • Include page content? [Y/n]
+
+✅ Notion sync configured!
+
+Syncing: 2 databases
+Schedule: Every 2 hours
+Output: _inbox/notion/
+
+Run /sync notion to pull now.
+```
+
 ## Source Status
 
 ```
@@ -430,8 +529,12 @@ Remaining RSS feeds: 4
 | `rss` | `/sources add rss <url>` | RSS/Atom feeds |
 | `urls` | `/sources add url <url>` | Watch specific URLs |
 | `sitemap` | `/sources add sitemap <url>` | Monitor sitemaps |
+| `luma` | `/sources add luma` | Luma (lu.ma) events |
+| `eventbrite` | `/sources add eventbrite` | Eventbrite events |
+| `meetup` | `/sources add meetup` | Meetup events |
 | `youtube` | `/sources add youtube` | YouTube transcripts |
 | `podcast` | `/sources add podcast <url>` | Podcast transcription |
+| `notion` | `/sources add notion` | Notion database sync |
 | `api` | `/sources add api` | Custom REST API |
 | `webhook` | `/sources add webhook` | Receive webhooks |
 

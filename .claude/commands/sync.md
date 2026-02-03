@@ -45,6 +45,13 @@ Pull content from configured sources into the inbox.
 | `slack` | Links from monitored channels | App Token |
 | `rss` | RSS/Atom feed articles | None |
 
+### Events
+| Source | Description | Auth |
+|--------|-------------|------|
+| `luma` | Events from lu.ma calendars | API Key |
+| `eventbrite` | Events from organizers/searches | API Key |
+| `meetup` | Events from Meetup groups | API Key |
+
 ### Media
 | Source | Description | Auth |
 |--------|-------------|------|
