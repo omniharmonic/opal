@@ -52,7 +52,17 @@ URLs and web content that need scraping.
 | **Sitemap** | None | Monitors sitemaps for new pages |
 | **Web Watch** | None | Monitors pages for changes |
 
-### 5. Media Sources
+### 5. Event Sources
+Events and gatherings from event platforms.
+
+| Source | Auth | How It Works |
+|--------|------|--------------|
+| **Luma** | API Key | Pulls events, attendees, and details via API |
+| **Eventbrite** | API Key | Monitors events from organizers/searches |
+| **Meetup** | API Key | Pulls events from groups |
+| **Lu.ma Calendar** | None | Scrapes public calendar pages |
+
+### 6. Media Sources
 Video and audio that need transcription.
 
 | Source | Auth | How It Works |
@@ -61,7 +71,7 @@ Video and audio that need transcription.
 | **Podcast** | None | Fetches episodes, transcribes via Whisper |
 | **Vimeo** | API Key | Pulls transcripts if available |
 
-### 6. Document Sources
+### 7. Document Sources
 Files and documents from cloud services.
 
 | Source | Auth | How It Works |
@@ -71,7 +81,7 @@ Files and documents from cloud services.
 | **Notion** | API Key | Exports selected databases |
 | **Filesystem** | None | Watches local directories |
 
-### 7. API Sources
+### 8. API Sources
 Custom data from any API.
 
 | Source | Auth | Varies | How It Works |
@@ -385,6 +395,90 @@ podcasts:
     keep_audio: false  # Delete after transcription
 ```
 
+### Luma Events
+
+Monitor Luma (lu.ma) for events.
+
+```yaml
+luma:
+  enabled: true
+  api_key_env: LUMA_API_KEY
+
+  sync:
+    schedule: "0 */6 * * *"  # Every 6 hours
+
+  # Monitor specific calendars
+  calendars:
+    - id: cal_xxxxx
+      name: Community Events
+      tags: [community, local]
+
+    - id: cal_yyyyy
+      name: Tech Meetups
+      tags: [technology]
+
+  # Monitor events by host
+  hosts:
+    - username: "example-org"
+      name: Example Organization
+
+  # Search-based monitoring
+  searches:
+    - query: "civic technology"
+      location: "San Francisco"
+      max_results: 20
+
+  # What to extract
+  extraction:
+    include_description: true
+    include_hosts: true
+    include_location: true
+    include_ticket_info: true
+    fetch_attendees: false  # Requires additional permissions
+
+  filters:
+    upcoming_only: true
+    max_age_days: 90  # Don't fetch events older than 90 days
+    exclude_past: true
+
+  output:
+    directory: _inbox/events/
+    filename_format: "{date}_{slug}.md"
+
+  # Schema routing - tells OPAL how to classify
+  routing:
+    prefer_type: event  # or gathering, activity based on your schema
+    extract_people: true  # Extract hosts as people entities
+    extract_organizations: true  # Extract organizing orgs
+```
+
+### Eventbrite
+
+Monitor Eventbrite events.
+
+```yaml
+eventbrite:
+  enabled: true
+  api_key_env: EVENTBRITE_API_KEY
+
+  sync:
+    schedule: "0 8 * * *"  # Daily at 8am
+
+  # Monitor specific organizers
+  organizers:
+    - id: "12345678901"
+      name: "Local Civic Group"
+
+  # Search-based monitoring
+  searches:
+    - query: "community organizing"
+      location: "New York"
+      within: "25mi"
+
+  output:
+    directory: _inbox/events/
+```
+
 ### Custom API
 
 Poll any REST API and transform the response.
@@ -458,6 +552,139 @@ webhooks:
         - issues.labeled
       output:
         directory: _inbox/github-issues/
+```
+
+---
+
+## Schema-Aware Link Processing
+
+When OPAL processes links from any source, it uses your schema to intelligently classify and route content.
+
+### How It Works
+
+```
+Link arrives → Fetch content → Analyze with schema → Route to correct type
+```
+
+1. **Schema injection**: Your `.opal/schema.yaml` is passed to the extraction agent
+2. **Type detection**: Claude analyzes content against your defined resource types
+3. **Field extraction**: Extracts fields defined in your schema for that type
+4. **Relationship detection**: Identifies connections to existing entities
+
+### Configuration
+
+```yaml
+# .opal/sources.yaml
+link_processing:
+  # Pass schema to all link processing
+  schema_aware: true
+
+  # URL pattern → type mappings (hints, not rules)
+  url_hints:
+    - pattern: "lu.ma/*"
+      suggest_type: event
+      extract_fields: [title, date, location, hosts]
+
+    - pattern: "github.com/*/issues/*"
+      suggest_type: issue
+      extract_fields: [title, author, labels, body]
+
+    - pattern: "arxiv.org/*"
+      suggest_type: paper
+      extract_fields: [title, authors, abstract, date]
+
+    - pattern: "grants.gov/*"
+      suggest_type: grant
+      extract_fields: [title, deadline, amount, eligibility]
+
+    - pattern: "eventbrite.com/e/*"
+      suggest_type: event
+      extract_fields: [title, date, location, organizer]
+
+  # Domain-specific handlers
+  domain_handlers:
+    "lu.ma":
+      handler: luma_event
+      api_fallback: true  # Use API if available
+
+    "youtube.com":
+      handler: youtube_video
+      fetch_transcript: true
+
+    "notion.so":
+      handler: notion_page
+      requires_auth: true
+
+  # Fallback behavior
+  fallback:
+    default_type: note
+    extract_metadata: true
+    use_readability: true
+```
+
+### Example: Processing a Luma Link
+
+When a Luma event link arrives (e.g., from Telegram):
+
+```
+1. URL detected: https://lu.ma/example-meetup
+
+2. Schema lookup:
+   - Found type "event" in schema
+   - Fields: title, date, location, description, hosts, attendees
+
+3. Fetch & Extract:
+   - Fetches page content (or uses Luma API if configured)
+   - Extracts: title, date, location, description, hosts
+
+4. Entity matching:
+   - Checks hosts against existing "person" entities
+   - Checks location against existing "place" entities
+   - Creates links to matches
+
+5. Output:
+   ---
+   type: event
+   title: Example Meetup
+   date: 2026-03-15
+   location: San Francisco, CA
+   hosts:
+     - "[[people/jane-doe]]"
+   source_url: https://lu.ma/example-meetup
+   ---
+
+   # Example Meetup
+
+   [Extracted description...]
+```
+
+### Custom Type Handlers
+
+For complex sources, create custom handlers:
+
+```yaml
+# .opal/sources.yaml
+custom_handlers:
+  - name: grant_opportunity
+    url_patterns:
+      - "grants.gov/search-results-detail/*"
+      - "*.foundationcenter.org/grants/*"
+
+    extraction:
+      # CSS selectors for key fields
+      selectors:
+        title: "h1.grant-title"
+        deadline: ".deadline-date"
+        amount: ".funding-amount"
+        eligibility: ".eligibility-section"
+
+      # Or use Claude extraction
+      claude_extraction: true
+      prompt_hint: "Extract grant details including eligibility requirements"
+
+    routing:
+      type: grant
+      tags: [funding, auto-imported]
 ```
 
 ---
