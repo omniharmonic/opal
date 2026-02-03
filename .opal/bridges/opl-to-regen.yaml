@@ -1,0 +1,302 @@
+# OPL ↔ Regen Ontology Bridge
+# Enables cross-taxonomy entity resolution between OPAL and KOI
+#
+# This bridge maps Open Protocol Library (OPL) civic taxonomy
+# to Regen Network's unified ontology for knowledge federation.
+
+version: "1.0"
+source: "opl:civic-v1"
+target: "regen:unified-v1"
+
+# =============================================================================
+# Resource Type Mappings
+# =============================================================================
+
+resource_types:
+  # Patterns - reusable solutions to recurring problems
+  pattern:
+    regen_class: "regen:Pattern"
+    rdf_type: "https://regen.network/ontology/v1#Pattern"
+    note: "Direct mapping - both represent reusable solutions"
+
+  # Protocols - step-by-step procedures
+  protocol:
+    regen_class: "regen:Methodology"
+    rdf_type: "https://regen.network/ontology/v1#Methodology"
+    note: "Protocols map to methodologies in ecological context"
+
+  # Playbooks - comprehensive guides combining patterns and protocols
+  playbook:
+    regen_class: "regen:Playbook"
+    rdf_type: "https://regen.network/ontology/v1#Playbook"
+    note: "Direct mapping"
+
+  # Primitives - fundamental building blocks
+  primitive:
+    regen_class: "regen:SemanticAsset"
+    rdf_type: "https://regen.network/ontology/v1#SemanticAsset"
+    note: "Fundamental building blocks of knowledge"
+
+  # Artifacts - documents, papers, external sources
+  artifact:
+    regen_class: "regen:Source"
+    rdf_type: "https://regen.network/ontology/v1#Source"
+    note: "Documents and external references"
+
+  # People
+  person:
+    regen_class: "regen:HumanActor"
+    rdf_type: "https://regen.network/ontology/v1#HumanActor"
+    note: "Individuals in the system"
+
+  # Organizations
+  organization:
+    regen_class: "regen:Commons"
+    rdf_type: "https://regen.network/ontology/v1#Commons"
+    parent_class: "regen:Agent"
+    note: "Collective entities and organizations"
+
+  # Activities / Events
+  activity:
+    regen_class: "regen:GovernanceAct"
+    rdf_type: "https://regen.network/ontology/v1#GovernanceAct"
+    note: "Events and activities map to governance acts"
+
+  # Notes
+  note:
+    regen_class: "regen:Note"
+    rdf_type: "https://regen.network/ontology/v1#Note"
+    note: "General notes and observations"
+
+  # Claims (from Regen discourse ontology)
+  claim:
+    regen_class: "regen:Claim"
+    rdf_type: "https://regen.network/ontology/v1#Claim"
+    note: "Verifiable assertions"
+
+  # Evidence
+  evidence:
+    regen_class: "regen:Evidence"
+    rdf_type: "https://regen.network/ontology/v1#Evidence"
+    note: "Data supporting claims"
+
+# =============================================================================
+# Civic Sector → SDG/Regen Domain Mappings
+# =============================================================================
+
+civic_sectors:
+  environmental-sustainability:
+    regen_domains:
+      - "regen:EcologicalRegeneration"
+      - "regen:ClimateAction"
+    sdg_alignment:
+      - "SDG:15"  # Life on Land
+      - "SDG:13"  # Climate Action
+      - "SDG:14"  # Life Below Water
+      - "SDG:6"   # Clean Water
+
+  governance-political-systems:
+    regen_domains:
+      - "regen:Governance"
+      - "regen:DecisionMaking"
+    sdg_alignment:
+      - "SDG:16"  # Peace, Justice, Strong Institutions
+
+  economic-resource-sharing:
+    regen_domains:
+      - "regen:Commons"
+      - "regen:TokenEconomics"
+      - "regen:RegenerativeEconomics"
+    sdg_alignment:
+      - "SDG:8"   # Decent Work and Economic Growth
+      - "SDG:12"  # Responsible Consumption
+
+  food-agriculture-systems:
+    regen_domains:
+      - "regen:Agroforestry"
+      - "regen:SoilCarbon"
+      - "regen:RegenerativeAgriculture"
+    sdg_alignment:
+      - "SDG:2"   # Zero Hunger
+      - "SDG:15"  # Life on Land
+
+  water-sanitation-systems:
+    regen_domains:
+      - "regen:BlueCarbon"
+      - "regen:WaterStewardship"
+    sdg_alignment:
+      - "SDG:6"   # Clean Water and Sanitation
+      - "SDG:14"  # Life Below Water
+
+  health-wellbeing-systems:
+    regen_domains:
+      - "regen:WellbeingEconomics"
+    sdg_alignment:
+      - "SDG:3"   # Good Health and Well-being
+
+  education-knowledge-systems:
+    regen_domains:
+      - "regen:KnowledgeCommons"
+      - "regen:CollectiveIntelligence"
+    sdg_alignment:
+      - "SDG:4"   # Quality Education
+
+  housing-built-environment:
+    regen_domains:
+      - "regen:RegenerativeDesign"
+    sdg_alignment:
+      - "SDG:11"  # Sustainable Cities
+
+  energy-systems:
+    regen_domains:
+      - "regen:CleanEnergy"
+    sdg_alignment:
+      - "SDG:7"   # Affordable and Clean Energy
+      - "SDG:13"  # Climate Action
+
+  transportation-mobility-systems:
+    regen_domains:
+      - "regen:SustainableMobility"
+    sdg_alignment:
+      - "SDG:11"  # Sustainable Cities
+
+  communication-information-systems:
+    regen_domains:
+      - "regen:KnowledgeCommons"
+      - "regen:OpenSource"
+    sdg_alignment:
+      - "SDG:9"   # Industry, Innovation, Infrastructure
+
+  civic-engagement-participation-systems:
+    regen_domains:
+      - "regen:ParticipatoryGovernance"
+      - "regen:CollectiveAction"
+    sdg_alignment:
+      - "SDG:16"  # Peace, Justice, Strong Institutions
+
+  justice-conflict-resolution:
+    regen_domains:
+      - "regen:RestorativeJustice"
+    sdg_alignment:
+      - "SDG:16"  # Peace, Justice, Strong Institutions
+
+# =============================================================================
+# Civic Scale → Regen Scale Mappings
+# =============================================================================
+
+civic_scales:
+  individual:
+    regen_scale: "regen:Individual"
+    rdf_type: "https://regen.network/ontology/v1#IndividualScale"
+
+  household:
+    regen_scale: "regen:Household"
+    rdf_type: "https://regen.network/ontology/v1#HouseholdScale"
+
+  neighborhood:
+    regen_scale: "regen:Community"
+    rdf_type: "https://regen.network/ontology/v1#CommunityScale"
+    note: "Neighborhood maps to community in Regen context"
+
+  municipal:
+    regen_scale: "regen:Municipal"
+    rdf_type: "https://regen.network/ontology/v1#MunicipalScale"
+
+  bioregional:
+    regen_scale: "regen:Bioregional"
+    rdf_type: "https://regen.network/ontology/v1#BioregionalScale"
+    note: "Key alignment - both systems emphasize bioregional framing"
+
+  national:
+    regen_scale: "regen:National"
+    rdf_type: "https://regen.network/ontology/v1#NationalScale"
+
+  planetary:
+    regen_scale: "regen:Planetary"
+    rdf_type: "https://regen.network/ontology/v1#PlanetaryScale"
+    note: "Maps to PROI (Planetary Regeneration Outcome Index)"
+
+# =============================================================================
+# Relationship Mappings
+# =============================================================================
+
+relationships:
+  # Generic relations
+  relates_to:
+    regen_predicate: "regen:relatedTo"
+    rdf_property: "https://regen.network/ontology/v1#relatedTo"
+
+  # Hierarchical
+  part_of:
+    regen_predicate: "regen:partOf"
+    rdf_property: "https://regen.network/ontology/v1#partOf"
+    inverse: "regen:hasPart"
+
+  # Implementation
+  implements:
+    regen_predicate: "regen:implements"
+    rdf_property: "https://regen.network/ontology/v1#implements"
+
+  # Discourse relations
+  supports:
+    regen_predicate: "regen:supports"
+    rdf_property: "https://regen.network/ontology/v1#supports"
+
+  opposes:
+    regen_predicate: "regen:opposes"
+    rdf_property: "https://regen.network/ontology/v1#opposes"
+
+  # Provenance
+  mentioned_in:
+    regen_predicate: "regen:contextualizes"
+    rdf_property: "https://regen.network/ontology/v1#contextualizes"
+
+  derived_from:
+    regen_predicate: "regen:derivedFrom"
+    rdf_property: "https://regen.network/ontology/v1#derivedFrom"
+
+  # Metabolic relations (Regen-specific)
+  produces:
+    regen_predicate: "regen:produces"
+    rdf_property: "https://regen.network/ontology/v1#produces"
+
+  orchestrates:
+    regen_predicate: "regen:orchestrates"
+    rdf_property: "https://regen.network/ontology/v1#orchestrates"
+
+  attests:
+    regen_predicate: "regen:attests"
+    rdf_property: "https://regen.network/ontology/v1#attests"
+
+# =============================================================================
+# Essence Alignment (Regen Regenerative Dimensions)
+# =============================================================================
+
+essence_alignment:
+  # Three regenerative dimensions from Regen ontology
+  re_whole:
+    name: "Re-Whole Value"
+    description: "Holistic systemic thinking"
+    civic_parallel: "Systems thinking across sectors"
+
+  nest_caring:
+    name: "Nest Caring"
+    description: "Relational stewardship"
+    civic_parallel: "Community care and mutual aid"
+
+  harmonize_agency:
+    name: "Harmonize Agency"
+    description: "Coordinated autonomy"
+    civic_parallel: "Participatory governance and consent"
+
+# =============================================================================
+# Namespaces
+# =============================================================================
+
+namespaces:
+  regen: "https://regen.network/ontology/v1#"
+  opal: "https://opal.commons/ontology/v1#"
+  schema: "https://schema.org/"
+  skos: "http://www.w3.org/2004/02/skos/core#"
+  dcterms: "http://purl.org/dc/terms/"
+  sdg: "https://metadata.un.org/sdg/"

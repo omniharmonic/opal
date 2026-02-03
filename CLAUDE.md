@@ -224,8 +224,29 @@ OPAL supports multiple content sources:
 | YouTube | Video transcripts |
 | Notion | Database exports and sync |
 | Filesystem | Watch folders for files |
+| **KOI** | Regen Network knowledge federation |
 
 Configure in `/setup` or edit `config/integrations.yaml`.
+
+### KOI Federation
+
+OPAL can federate with Regen Network's Knowledge Organization Infrastructure (KOI):
+
+```
+/koi                    # Show KOI status
+/koi search <query>     # Search KOI knowledge graph
+/koi publish            # Publish entities to KOI
+/koi sync               # Pull from subscribed topics
+```
+
+This enables:
+- Access to 64K+ indexed documents across the regenerative ecosystem
+- Semantic search via production-scale pgvector embeddings
+- Knowledge graph queries via Apache Jena Fuseki
+- On-chain verification via Regen Ledger MCP
+- Cross-community entity reconciliation
+
+See `.claude/KOI-INTEGRATION.md` for full implementation details.
 
 ### Notion Import
 
