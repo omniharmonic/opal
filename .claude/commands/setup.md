@@ -96,9 +96,16 @@ Community & Civic
       Events, grants, initiatives.
       → grants, gatherings, initiatives, courses, alliances
 
+Ecological & Regenerative
+─────────────────────────
+  [8] Regen Network
+      Carbon credits, methodologies, ecological projects.
+      KOI-compatible for federation with Regen knowledge commons.
+      → methodologies, credit_classes, projects, claims, evidence
+
 Minimal
 ───────
-  [8] Minimal
+  [9] Minimal
       Just notes. Build from there.
       → notes
 
@@ -598,6 +605,10 @@ Work & Projects
 Community & Civic
   opl              Open Protocol Library (patterns, protocols, playbooks)
   activity-index   Event tracking (grants, gatherings, initiatives)
+
+Ecological & Regenerative
+  regen            Regen Network (methodologies, credits, projects, claims)
+                   KOI-compatible for knowledge federation
 
 Use: /setup --template <name>
 ```

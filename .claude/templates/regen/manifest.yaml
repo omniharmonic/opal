@@ -7,19 +7,32 @@
 name: Regen Network
 id: regen
 version: "1.0"
+author: Regen Network / OPAL
 description: |
   For ecological regeneration knowledge, carbon credit methodologies,
   and Regen Network ecosystem content. Designed for federation with
   KOI (Knowledge Organization Infrastructure).
 
-koi_compatible: true
-ontology_namespace: "https://regen.network/ontology/v1#"
+use_cases:
+  - Ecological regeneration projects
+  - Carbon credit methodologies
+  - MRV (Monitoring, Reporting, Verification)
+  - Regen Ledger documentation
+  - Environmental claims and evidence
+  - Regenerative agriculture knowledge
+  - Climate action coordination
+
+federation:
+  koi_compatible: true
+  ontology_namespace: "https://regen.network/ontology/v1#"
+  taxonomy_bridge: opl-to-regen.yaml
 
 # =============================================================================
-# Resource Types
+# Schema Definition
 # =============================================================================
 
-resource_types:
+schema:
+  resource_types:
   # Methodologies - verification protocols for credit classes
   - id: methodology
     name: Methodology
