@@ -90,6 +90,13 @@ Custom data from any API.
 | **Webhook** | None | Receives POST requests |
 | **GraphQL** | Configurable | Executes queries on schedule |
 
+### 9. Calendar Integration
+Bidirectional sync with calendar for meeting context.
+
+| Source | Auth | How It Works |
+|--------|------|--------------|
+| **Google Calendar** | OAuth / MCP | Enriches transcripts with attendees, writes back notes |
+
 ---
 
 ## Configuration
@@ -552,6 +559,130 @@ webhooks:
         - issues.labeled
       output:
         directory: _inbox/github-issues/
+```
+
+### Google Calendar (Bidirectional)
+
+Enrich meeting transcripts with attendee information and write back notes.
+
+```yaml
+google_calendar:
+  enabled: true
+  mcp_server: google-calendar  # Preferred: use Google Calendar MCP
+
+  # Or direct API (if MCP not available)
+  api:
+    credentials_env: GOOGLE_CALENDAR_CREDENTIALS
+    token_env: GOOGLE_CALENDAR_TOKEN
+
+  # Which calendars to search for meeting context
+  calendars:
+    - primary
+    - work@example.com
+
+  # Exclude personal calendars from search
+  exclude_calendars:
+    - family
+    - personal
+
+  # === MEETING CONTEXT (Pre-processing) ===
+  # Enrich transcripts with attendee info before extraction
+  meeting_context:
+    enabled: true
+
+    # How far from detected time to look for events
+    time_window_minutes: 30
+
+    # Privacy settings
+    include_emails: true      # Include attendee emails
+    skip_private_events: true # Don't look up private events
+
+  # === CALENDAR WRITEBACK (Post-processing) ===
+  # Write meeting notes back to calendar after processing
+  writeback:
+    enabled: true
+
+    # What to write to calendar description
+    content:
+      summary: true           # Meeting summary
+      action_items: true      # Extracted action items
+      key_decisions: true     # Key decisions made
+      opal_link: true         # Link back to full notes
+
+    # How to handle existing event descriptions
+    mode: smart_merge         # append | prepend | replace | smart_merge
+
+    # Google Tasks integration
+    tasks:
+      enabled: true
+      list_name: "OPAL Meeting Action Items"  # Creates if doesn't exist
+      include_due_dates: true                  # Parse due dates from action items
+      include_assignees: true                  # Assign to attendee emails
+
+    # When to trigger writeback
+    trigger: on_commit        # on_commit | manual
+
+    # Safety
+    require_confirmation: false  # Prompt before writing
+    dry_run_first: false        # Show preview before write
+
+  # === PRIVACY SETTINGS ===
+  privacy:
+    # Skip private calendar events
+    skip_private_events: true
+
+    # Handle meetings with external attendees
+    external_attendees: warn  # skip | warn | proceed
+
+    # Detect sensitive content markers
+    sensitive_markers:
+      - "confidential"
+      - "private"
+      - "off the record"
+    sensitive_action: skip_writeback  # skip_writeback | warn | redact
+```
+
+#### How Calendar Integration Works
+
+```
+┌─────────────────┐
+│ Meeting happens │
+└────────┬────────┘
+         ▼
+┌─────────────────┐     ┌────────────────────┐
+│ Transcript      │────▶│ OPAL /process      │
+│ arrives         │     ├────────────────────┤
+└─────────────────┘     │ [MEETING_CONTEXT]  │◀── Query calendar
+                        │  ↓                 │    Get attendees
+                        │ [CLEANUP]          │◀── Use attendee names
+                        │  ↓                 │    for speaker matching
+                        │ [EXTRACT]          │◀── Better entity matching
+                        │  ↓                 │    "Speaker 1" → "Alice"
+                        │ [STAGE]            │
+                        └────────┬───────────┘
+                                 ▼
+                        ┌────────────────────┐
+                        │ /review            │
+                        │ Human approves     │
+                        └────────┬───────────┘
+                                 ▼
+                        ┌────────────────────┐
+                        │ [COMMIT]           │
+                        │  ↓                 │
+                        │ [WRITEBACK]        │──▶ Update calendar event
+                        │                    │    Create Google Tasks
+                        └────────────────────┘
+```
+
+#### Commands
+
+```bash
+/calendar                    # Show integration status
+/calendar sync               # Write pending notes to calendar
+/calendar writeback <path>   # Write specific transcript
+/calendar lookup <path>      # Test calendar lookup
+/calendar rollback <id>      # Undo a writeback
+/calendar configure          # Interactive configuration
 ```
 
 ---
