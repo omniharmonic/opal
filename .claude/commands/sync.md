@@ -57,123 +57,155 @@ Run /setup to configure content sources, or /sources add to add one.
 ```
 STOP here.
 
-### Step 2: Process Each Source
+### Step 2: Dispatch to Source Processors
 
-For each enabled source (or specified source if argument given), execute Steps 2a-2c:
+For each enabled source (or specified source if argument given), dispatch to the appropriate source processor skill.
 
-#### Step 2a: Check Source Type and Connect
+**CRITICAL:** Each source type has a dedicated skill with detailed EXECUTION INSTRUCTIONS. You MUST follow those skill instructions to perform the actual extraction.
 
-**For filesystem/meetily (local sources):**
-1. Check if path exists using Bash `test -e <path>`
-2. If meetily, check SQLite database exists
+#### Source Type → Skill Mapping
 
-**For API sources (telegram, rss, otter, fathom, etc.):**
-1. Check if credentials are configured in environment or config
-2. Note: Actual API calls would require MCP servers or external tools
+| Source Type | Skill Path | Description |
+|-------------|------------|-------------|
+| `meetily` | `.claude/skills/sync-meetily/SKILL.md` | Extract from local SQLite database |
+| `fathom` | `.claude/skills/fathom-to-obsidian/SKILL.md` | Pull from Fathom.video API |
+| `rss` | `.claude/skills/sync-rss/SKILL.md` | Fetch RSS/Atom feeds |
+| `filesystem` | `.claude/skills/sync-filesystem/SKILL.md` | Watch local directories |
+| `telegram` | `.claude/skills/sync-telegram/SKILL.md` | Monitor Telegram channels |
 
-**For URL watch sources:**
-1. Prepare list of URLs to check
+#### Step 2a: For Each Enabled Source
 
-**Output:**
+**Action:** Read the corresponding skill file and execute its EXECUTION INSTRUCTIONS.
+
 ```
 [{index}/{total}] {source_name}
-      ├── Checking {source_type}...
+      ├── Loading processor: sync-{source_type}
+      ├── Executing EXECUTION INSTRUCTIONS...
 ```
 
-#### Step 2b: Fetch New Content
+**FOR meetily:**
+1. Read `.claude/skills/sync-meetily/SKILL.md`
+2. Execute ALL steps in its EXECUTION INSTRUCTIONS section:
+   - Locate database at `$HOME/Library/Application Support/com.meetily.ai/meeting_minutes.sqlite`
+   - Query meetings using sqlite3
+   - Filter by duration, title exclusions, and cursor
+   - Extract transcript content
+   - Generate markdown files with proper frontmatter
+   - Write to `_inbox/transcripts/`
 
-**For filesystem:**
-1. Use Glob to find new files since last sync
-2. Use Bash to copy files to inbox:
+**FOR fathom:**
+1. Read `.claude/skills/fathom-to-obsidian/SKILL.md`
+2. Load API key from `.env.local` or environment variable `FATHOM_API_KEY`
+3. Execute the sync script:
    ```bash
-   cp "{source_path}" "_inbox/{category}/"
+   source .env.local 2>/dev/null
+   python3 .claude/skills/fathom-to-obsidian/scripts/fathom_sync.py \
+     --api-key "$FATHOM_API_KEY" \
+     --output-dir "vault/_inbox/transcripts/fathom" \
+     --days 14
    ```
+4. Report synced meetings count and any errors
+5. Write to `_inbox/transcripts/fathom/`
 
-**For meetily (local SQLite):**
-1. Note: Would query SQLite for meetings since last sync
-2. Create markdown file for each meeting in `_inbox/meetings/`
+**FOR rss:**
+1. Read `.claude/skills/sync-rss/SKILL.md`
+2. Execute ALL steps in its EXECUTION INSTRUCTIONS section:
+   - Load feed URLs from configuration
+   - Use WebFetch to fetch and parse each feed
+   - Filter items by cursor/date
+   - Fetch full article content for each new item
+   - Generate markdown files with proper frontmatter
+   - Write to `_inbox/feeds/`
 
-**For RSS feeds:**
-1. Use WebFetch tool to fetch feed URL
-2. Parse feed items and filter by date
-3. For each new item, fetch full content and save to `_inbox/feeds/`
+**FOR filesystem:**
+1. Read `.claude/skills/sync-filesystem/SKILL.md`
+2. Execute ALL steps in its EXECUTION INSTRUCTIONS section:
+   - Load watch paths from configuration
+   - Use Glob to find matching files
+   - Check modification times against seen_files
+   - Process files by type (PDF, markdown, text, etc.)
+   - Generate markdown files with proper frontmatter
+   - Write to `_inbox/documents/`
 
-**For URL watching:**
-1. Use WebFetch tool to check each URL
-2. Compare content hash to detect changes
-3. Save changed content to `_inbox/scraped/`
+**FOR telegram:**
+1. Read `.claude/skills/sync-telegram/SKILL.md`
+2. Execute ALL steps in its EXECUTION INSTRUCTIONS section:
+   - Check for bot token in config or environment
+   - Use Bash with curl to call Telegram API
+   - Extract URLs from messages
+   - Use WebFetch to get content from each URL
+   - Generate markdown files with proper frontmatter
+   - Write to `_inbox/links/telegram/`
 
-**For API sources (telegram, otter, etc.):**
-1. Note in output that this requires MCP server or API integration
-2. If MCP available, use appropriate tool
-3. If not, report that source requires configuration
+#### Step 2b: Handle Unsupported Sources
 
-**Output:**
+If a source type doesn't have a dedicated processor skill:
+
 ```
-      ├── Found: {N} new items
-      │   ├── {item1}
-      │   └── {item2}
-```
-
-#### Step 2c: Write to Inbox
-
-**Action:** Use Write tool to create inbox files.
-
-For each fetched item:
-
-1. Generate filename: `{source}-{date}-{slug}.md`
-
-2. Create markdown with frontmatter:
-   ```yaml
-   ---
-   source: {source_name}
-   source_id: {unique_id}
-   synced_at: {timestamp}
-   url: {if applicable}
-   ---
-
-   {content}
-   ```
-
-3. Write to appropriate inbox subdirectory
-
-4. If `--dry-run`: Report what WOULD be written, don't actually write
-
-**Output:**
-```
-      └── ✅ Synced {N} items → _inbox/{category}/
+[{index}/{total}] {source_name}
+      └── ⚠️ No processor available for {source_type}
+          Run /sources configure {source_type} for setup help
 ```
 
-**If dry-run:**
+Continue to next source.
+
+#### Step 2c: Dry Run Mode
+
+If `--dry-run` is set, skills should report what WOULD happen without making changes:
+
 ```
-      └── 📋 Would sync {N} items → _inbox/{category}/
+[{index}/{total}] {source_name}
+      ├── Would check: {database/feed/path/channel}
+      ├── Estimated items: {count}
+      └── 📋 Dry run - no changes made
 ```
 
-### Step 3: Update Sync State
+### Step 3: Aggregate Results
 
-**Action:** Use Read and Write tools to update state file.
+After all source processors complete, collect their results:
 
-1. Read current `_index/sync-state.json`
+1. Count total items synced across all sources
+2. Count total errors
+3. Note any sources that were skipped
 
-2. Update for each synced source:
-   - `last_sync`: Current timestamp
-   - `cursors`: Updated position markers
-   - `items_synced`: Increment count
-   - `errors`: Record any failures
+### Step 4: Update Pipeline State
 
-3. Write updated state back
+**Action:** Update `_index/pipeline-state.json` with sync summary.
 
-### Step 4: Summary
+```json
+{
+  "last_activity": "{current_timestamp}",
+  "last_sync": "{current_timestamp}",
+  "sync_summary": {
+    "sources_checked": {count},
+    "items_synced": {count},
+    "errors": {count}
+  }
+}
+```
+
+### Step 5: Summary
 
 **Action:** Report sync results.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sync Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Sources:
+{for each source:}
+├── {source_name}: {count} items synced
+
 Summary:
 • Sources checked: {N}
 • Items synced: {N}
 • Failed: {N} (see _inbox/failed/)
 • Total inbox items: {N}
+
+New files:
+{for each new file:}
+├── {filename}
 
 Next: Run /process to analyze new content
 ```
@@ -182,7 +214,7 @@ Next: Run /process to analyze new content
 
 ## Error Handling
 
-If any source fails:
+If any source processor fails:
 
 1. Log the error:
    ```
@@ -206,6 +238,28 @@ If any source fails:
      ]
    }]
    ```
+
+### Common Errors by Source
+
+**Meetily:**
+- Database not found → Check if Meetily is installed and has recordings
+- Database locked → Meetily may be recording; wait and retry
+- No meetings found → Filters may be too restrictive
+
+**RSS:**
+- Feed not found (404) → URL may have changed
+- Parse error → Feed may not be valid RSS/Atom
+- Article fetch failed → Site may be blocking; will retry
+
+**Filesystem:**
+- Path not found → Check watch path configuration
+- Permission denied → Check file permissions
+- File too large → Adjust max_file_size_mb setting
+
+**Telegram:**
+- Invalid bot token → Reconfigure with /sources configure telegram
+- Bot not in channel → Add bot to the channel
+- Rate limited → Wait and retry automatically
 
 ---
 
