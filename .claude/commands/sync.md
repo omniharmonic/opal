@@ -69,6 +69,7 @@ For each enabled source (or specified source if argument given), dispatch to the
 |-------------|------------|-------------|
 | `meetily` | `.claude/skills/sync-meetily/SKILL.md` | Extract from local SQLite database |
 | `fathom` | `.claude/skills/fathom-to-obsidian/SKILL.md` | Pull from Fathom.video API |
+| `fireflies` | `.claude/skills/sync-fireflies/SKILL.md` | Pull from Fireflies.ai GraphQL API |
 | `rss` | `.claude/skills/sync-rss/SKILL.md` | Fetch RSS/Atom feeds |
 | `filesystem` | `.claude/skills/sync-filesystem/SKILL.md` | Watch local directories |
 | `telegram` | `.claude/skills/sync-telegram/SKILL.md` | Monitor Telegram channels |
@@ -106,6 +107,20 @@ For each enabled source (or specified source if argument given), dispatch to the
    ```
 4. Report synced meetings count and any errors
 5. Write to `_inbox/transcripts/fathom/`
+
+**FOR fireflies:**
+1. Read `.claude/skills/sync-fireflies/SKILL.md`
+2. Load API key from `.env.local` or environment variable `FIREFLIES_API_KEY`
+3. Execute the sync script:
+   ```bash
+   source .env.local 2>/dev/null
+   python3 .claude/skills/sync-fireflies/scripts/fireflies_sync.py \
+     --api-key "$FIREFLIES_API_KEY" \
+     --output-dir "_inbox/transcripts/fireflies" \
+     --days 14
+   ```
+4. Report synced meetings count and any errors
+5. Write to `_inbox/transcripts/fireflies/`
 
 **FOR rss:**
 1. Read `.claude/skills/sync-rss/SKILL.md`
