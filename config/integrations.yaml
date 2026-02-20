@@ -166,6 +166,31 @@ sources:
       include_action_items: true
       convert_action_items_to_tasks: true  # Add [ ] checkboxes
 
+  fireflies:
+    enabled: false
+    type: transcript
+    prefer_mcp: false
+    api_key_env: FIREFLIES_API_KEY
+    api_endpoint: https://api.fireflies.ai/graphql
+
+    sync:
+      schedule: "0 */6 * * *"  # Every 6 hours
+
+    filters:
+      exclude_titles:
+        - "standup"
+        - "1:1"
+        - "daily sync"
+        - "check-in"
+      min_duration_minutes: 5
+      max_age_days: 30
+
+    output:
+      directory: _inbox/transcripts/fireflies/
+      include_summary: true
+      include_action_items: true
+      date_folders: false
+
   # ─────────────────────────────────────────
   # Communication Sources
   # ─────────────────────────────────────────
